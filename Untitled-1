@@ -1,0 +1,101 @@
+class Point {
+    constructor(x,y,data) {
+        this.x = x;
+        this.y = y;
+        this.data = data;
+        
+    }
+}
+
+class Rectangle {
+    constructor(x,y,w,h) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+    }
+
+    contains(point) {
+        return (point.x >= this.x - this.w &&
+            point.x < this.x + this.w &&
+            point.y >= this.y - this.h &&
+            point.y < this.y + this.h);
+    }
+}
+
+class QuadTree {
+    constructor(boundary, capacity){
+        this.boundary = boundary;
+        this.capacity = capacity;
+        this.points = [];
+        this.divisions = null;
+    }
+
+    peek(fn) {
+        if(this.divisions) {
+            for (let x = 0; x < this.divisions.length; x++) {
+                for (let y = 0; y < this.divisions[x].length; y++) {
+                    fn(this.divisions[x][y]);                    
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    insert(point) {
+        if(!this.boundary.contains(point)) return;
+        
+        if(this.points.length < this.capacity){
+            this.points.push(point);
+        } else {
+            if(!this.divisions) {
+                this.subdivide();
+            }
+
+            this.peek(function(qTree){
+                qTree.insert(point);
+            });
+        }
+    }
+
+    subdivide() {
+
+        this.divisions = [[null,null],[null,null]];
+
+        let x = this.boundary.x;
+        let y = this.boundary.y;
+        let w = this.boundary.w;
+        let h = this.boundary.h;
+
+        this.divisions[1][0] = (new QuadTree(
+            new Rectangle(x + w/2, y - h/2, w/2, h/2),
+            this.capacity
+        ));
+
+        this.divisions[0][0] = (new QuadTree(
+            new Rectangle(x - w/2, y - h/2, w/2, h/2),
+            this.capacity
+        ));
+
+        this.divisions[1][1] = (new QuadTree(
+            new Rectangle(x + w/2, y + h/2, w/2, h/2),
+            this.capacity
+        ));
+
+        this.divisions[0][1] = (new QuadTree(
+            new Rectangle(x - w/2, y + h/2, w/2, h/2),
+            this.capacity
+        )); 
+    }
+}
+
+
+let qtree = new QuadTree(new Rectangle(
+    500,500,500,500
+), 4);
+
+for (let i = 0; i < 5; i++) {
+    let p = new Point(Math.random() * 500, Math.random() * 500, {});
+    qtree.insert(p);
+}
