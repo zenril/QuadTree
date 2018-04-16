@@ -4,7 +4,8 @@
   "description": "",
   "main": "QuadTree.js",
   "scripts": {
-    "webpack": "webpack --watch"
+    "webpack": "webpack --watch",
+    "examples": "webpack --watch --config ./examples/webpack.config.js"
   },
   "author": "",
   "license": "ISC",

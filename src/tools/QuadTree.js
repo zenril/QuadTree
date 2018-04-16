@@ -60,6 +60,31 @@ class QuadTree {
         this.capacity = capacity;
         this.points = [];
         this.divisions = null;
+        QuadTree.trigger('create', [this]);
+    }
+
+    static get events (){
+        if(!QuadTree.event_bindings) {
+            QuadTree.event_bindings = {
+                create : [],
+                insert : [],
+                peek : [],
+                point : [],
+                found : [],
+                intersects : []
+            };
+        }
+        return QuadTree.event_bindings;
+    }
+
+    static sub(event, fn){
+        QuadTree.events[event].push(fn);
+    }
+
+    static trigger(event, data){
+        QuadTree.events[event].forEach(element => {
+            element.apply(null, data);
+        });
     }
 
     peek(fn) {
@@ -77,6 +102,7 @@ class QuadTree {
     insert(point) {
         if(!this.boundary.contains(point)) return;
         if(this.points.length < this.capacity){
+            QuadTree.trigger('point', [this, point]);
             this.points.push(point);
         } else {
             if(!this.divisions) {
@@ -84,28 +110,36 @@ class QuadTree {
             }
 
             this.peek(function(qTree){
+                if(!qTree.insert){
+                    console.log(qTree);
+                }
                 qTree.insert(point);
             });
         }
     }
 
     findPoints(refPoint, fn, ret) {
-
+        let _this = this;
         if(!ret) ret = [];
-        if(!this.intersectsWithPoint(refPoint)){
+        if(!_this.intersectsWithPoint(refPoint)){
             return ret;
         }
 
-        if(this.divisions) {
-            this.peek(function(qTree){
+        console.log('a');
+
+        QuadTree.trigger('peek', [_this]);
+
+        if(_this.divisions) {
+            _this.peek(function(qTree){
                 qTree.findPoints(refPoint, fn, ret);
             });
         }
 
-        if(this.points.length){
-            for (let p = 0; p < this.points.length; p++) {
-                const element = this.points[p];
-                if(fn(element)){
+        if(_this.points.length){
+            for (let p = 0; p < _this.points.length; p++) {
+                const element = _this.points[p];
+                if(!fn || fn(element)){
+                    QuadTree.trigger('found', [_this, element]);
                     ret.push(element);
                 }
             }
@@ -117,13 +151,45 @@ class QuadTree {
     intersectsWithPoint(point){
         var rectX = this.boundary.x - this.boundary.w/2;
         var rectY = this.boundary.y - this.boundary.h/2;
+
+
+
         var deltaX = point.x - Math.max(rectX, Math.min(point.x, rectX + this.boundary.w));
         var deltaY = point.y - Math.max(rectY, Math.min(point.y, rectY + this.boundary.h));
-        return (deltaX * deltaX + deltaY * deltaY) < (point.r * point.r);
+        var intersects = (deltaX * deltaX + deltaY * deltaY) < (point.r * point.r);
+
+        //console.log(rectX, rectY, this.boundary.w, this.boundary.h);
+        if(intersects){
+            // window.stroke(0,100,155);
+            // window.noFill();
+            // window.strokeWeight(6.5);
+            // window.rectMode(window.CORNER);
+            // window.rect(rectX, rectY, this.boundary.w, this.boundary.h);
+            QuadTree.trigger('intersects', [this, point]);
+        } else {
+            // window.stroke(133,100,15);
+            // window.noFill();
+            // window.strokeWeight(1.5);
+            // window.rectMode(window.CORNER);
+            // window.rect(rectX, rectY, this.boundary.w, this.boundary.h);
+        }
+
+        // window.stroke(0,255,255);
+        // window.noFill();
+        // window.strokeWeight(1);
+        // window.ellipseMode(window.CENTER); // Set ellipseMode to CENTER
+        // window.ellipse(rectX, rectY, 2,2);
+
+        // window.stroke(255,0,0);
+        // window.noFill();
+        // window.strokeWeight(1);
+        // window.ellipseMode(window.CENTER); // Set ellipseMode to CENTER
+        // window.ellipse(this.boundary.x, this.boundary.y, 2,2);
+
+        return intersects;
     }
 
     findInRadius(refPoint, r) {
-        console.log('a');
         refPoint.r = r || refPoint.r;
         return this.findPoints(refPoint, function(point){
             return refPoint.intersects(point);
@@ -131,53 +197,40 @@ class QuadTree {
     }
 
     subdivide() {
-
-        this.divisions = [[null,null],[null,null]];
+        //just descriptions these will get overridden
+        this.divisions = [['0:left-0top',   '1:right-0top'],
+                          ['0:left-1bottom','1:right-1bottom']];
 
         let x = this.boundary.x;
         let y = this.boundary.y;
         let w = this.boundary.w;
         let h = this.boundary.h;
 
-        this.divisions[1][0] = (new QuadTree(
-            new Rectangle(x + w/2, y - h/2, w/2, h/2),
+        let right = 1;
+        let left = 0;
+        let top = 0;
+        let bottom = 1;
+
+        this.divisions[right][top] = (new QuadTree(
+            new Rectangle(x + w/4, y - h/4, w/2, h/2),
             this.capacity
         ));
 
-        this.divisions[0][0] = (new QuadTree(
-            new Rectangle(x - w/2, y - h/2, w/2, h/2),
+        this.divisions[left][top] = (new QuadTree(
+            new Rectangle(x - w/4, y - h/4, w/2, h/2),
             this.capacity
         ));
 
-        this.divisions[1][1] = (new QuadTree(
-            new Rectangle(x + w/2, y + h/2, w/2, h/2),
+        this.divisions[right][bottom] = (new QuadTree(
+            new Rectangle(x + w/4, y + h/4, w/2, h/2),
             this.capacity
         ));
 
-        this.divisions[0][1] = (new QuadTree(
-            new Rectangle(x - w/2, y + h/2, w/2, h/2),
+        this.divisions[left][bottom] = (new QuadTree(
+            new Rectangle(x - w/4, y + h/4, w/2, h/2),
             this.capacity
-        )); 
+        ));
     }
 }
-
-let qtree = new QuadTree(new Rectangle(
-    250,250, //x,y center
-    500,500  //w,h
-), 4);
-
-for (let i = 0; i < 50; i++) {
-    let p = new Point({
-        x: Math.random() * 500, 
-        y: Math.random() * 500}, 
-        {}
-    );
-    qtree.insert(p);
-}
-
-qtree.findInRadius(new Circle({
-    x:250,y:250,
-    r:200
-}));
 
 export {Point, QuadTree, Rectangle, Circle};
