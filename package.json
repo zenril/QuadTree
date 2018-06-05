@@ -5,7 +5,7 @@
   "main": "QuadTree.js",
   "scripts": {
     "webpack": "webpack --watch",
-    "examples": "webpack --watch --config ./examples/webpack.config.js"
+    "examples": "webpack --watch --config ./examples/examples.config.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +17,8 @@
     "babel-loader": "^7.1.4",
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
+    "browser-sync": "^2.23.6",
+    "browser-sync-webpack-plugin": "^2.2.2",
     "webpack-cli": "^2.0.14"
   }
 }

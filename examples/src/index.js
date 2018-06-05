@@ -38,11 +38,11 @@ QuadTree.sub('found', function(qt, point){
 
 QuadTree.sub('intersects', function(qt, point){
     //console.log('a');
-    window.stroke(0,255,255);
-    window.noFill();
-    window.strokeWeight(1);
-    window.ellipseMode(window.CENTER); // Set ellipseMode to CENTER
-    window.ellipse(point.x, point.y, point.r * 2, point.r * 2);
+    // window.stroke(0,255,255);
+    // window.noFill();
+    // window.strokeWeight(1);
+    // window.ellipseMode(window.CENTER); // Set ellipseMode to CENTER
+    // window.ellipse(point.x, point.y, point.r * 2, point.r * 2);
 
 });
 
@@ -54,11 +54,11 @@ window.setup = function() {
         250 + 500 / 2, 250 + 500 / 2, //x,y center
         500,500  //w,h
     ), 4);
-    for (let y = 250; y <250 + 500; y = y + (500 / 50)) {
-        for (let x = 250; x <250 + 500; x = x + (500 / 50)) {
+    for (let y = 250; y <250 + 500; y = y + (500 / 150)) {
+        for (let x = 250; x <250 + 500; x = x + (500 / 150)) {
             let p = new QPoint({
-                x: x,
-                y: y
+                x: 250 + Math.random() * 500,
+                y: 250 + Math.random() * 500
             },
             {});
             qtree.insert(p);
@@ -67,12 +67,6 @@ window.setup = function() {
 
     window.QCircle = QCircle;
 
-    var t = window.qtree.findInRadius(new window.QCircle({
-        x: 250 + 500 / 2,
-        y: 250 + 500 / 2,
-        r: 50
-    }));
 
-    console.log(t);
 }
 

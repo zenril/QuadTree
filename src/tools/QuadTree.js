@@ -111,7 +111,7 @@ class QuadTree {
 
             this.peek(function(qTree){
                 if(!qTree.insert){
-                    console.log(qTree);
+                    //console.log(qTree);
                 }
                 qTree.insert(point);
             });
@@ -125,7 +125,7 @@ class QuadTree {
             return ret;
         }
 
-        console.log('a');
+        //console.log('a');
 
         QuadTree.trigger('peek', [_this]);
 
