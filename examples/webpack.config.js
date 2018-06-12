@@ -1,14 +1,19 @@
 const webpack = require('webpack'); //to access built-in plugins
 const path = require('path');
+const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 
 const config = {
     devtool: 'source-map',
     entry:  {
-        app : path.resolve(__dirname, 'src/index.js')
+        app : path.resolve(__dirname, 'src/app.js'),
+        //twitch : path.resolve(__dirname, 'src/twitch.js'),
+        // fly : path.resolve(__dirname, 'src/fly.js'),
+        // quad : path.resolve(__dirname, 'src/index.js'),
+        // oct : path.resolve(__dirname, 'src/oct.js')
+
     },
     output: {
-        path: path.resolve(__dirname, 'build'),
-        filename: 'example.js'
+        path: path.resolve(__dirname, 'build')
     },
     module: {
         rules: [
@@ -16,12 +21,28 @@ const config = {
                 test: /\.js$/,
                 loader: 'babel-loader',
                 query: {
-                    presets: ['env', 'react']
-                }
+                    presets: ["es2015", "stage-0" ,'env', 'react']
+                },
+                exclude: /node_modules/
+            },
+            { 
+                test: /\.css$/, 
+                use: ['style-loader', 'css-loader'] }, 
+            {
+                test: /\.scss$/,
+                use: ['style-loader', 'css-loader', 'sass-loader?sourceMap=true']
             }
         ]
     },
-    plugins: []
+    plugins: [
+        new BrowserSyncPlugin({
+            // browse to http://localhost:3000/ during development,
+            // ./public directory is being served
+            host: 'localhost',
+            port: 3070,
+            server: { baseDir: ['examples'] }
+          })
+    ]
 };
 
 module.exports = config;

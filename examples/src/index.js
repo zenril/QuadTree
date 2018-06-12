@@ -9,14 +9,14 @@ QuadTree.sub('create', function(qt){
     // window.rect(qt.boundary.x, qt.boundary.y, qt.boundary.w * 2, qt.boundary.h * 2);
 });
 
-QuadTree.sub('peek', function(qt){
-    //console.log('a');
-    window.stroke(255,0,0);
-    window.noFill();
-    window.strokeWeight(0.5);
-    window.rectMode(window.CENTER);
-    window.rect(qt.boundary.x, qt.boundary.y, qt.boundary.w * 2, qt.boundary.h * 2);
-});
+// QuadTree.sub('peek', function(qt){
+//     //console.log('a');
+//     window.stroke(255,0,0);
+//     window.noFill();
+//     window.strokeWeight(0.5);
+//     window.rectMode(window.CENTER);
+//     window.rect(qt.boundary.x, qt.boundary.y, qt.boundary.w * 2, qt.boundary.h * 2);
+// });
 
 QuadTree.sub('point', function(qt, point){
     //console.log('a');
@@ -36,41 +36,51 @@ QuadTree.sub('found', function(qt, point){
     window.rect(point.x, point.y, 1, 1);
 });
 
-QuadTree.sub('intersects', function(qt, point){
-    //console.log('a');
-    window.stroke(0,255,255);
-    window.noFill();
-    window.strokeWeight(1);
-    window.ellipseMode(window.CENTER); // Set ellipseMode to CENTER
-    window.ellipse(point.x, point.y, point.r * 2, point.r * 2);
+// QuadTree.sub('intersects', function(qt, point){
+//     //console.log('a');
+//     // window.stroke(0,255,255);
+//     // window.noFill();
+//     // window.strokeWeight(1);
+//     // window.ellipseMode(window.CENTER); // Set ellipseMode to CENTER
+//     // window.ellipse(point.x, point.y, point.r * 2, point.r * 2);
 
-});
+// });
 
 window.setup = function() {
-    window.createCanvas(1500, 1500);
+    window.createCanvas(500, 500);
     background(0);
 
     window.qtree = new QuadTree(new QRectangle(
-        250 + 500 / 2, 250 + 500 / 2, //x,y center
+        500 / 2, 500 / 2, //x,y center
         500,500  //w,h
     ), 4);
-    for (let y = 250; y <250 + 500; y = y + (500 / 50)) {
-        for (let x = 250; x <250 + 500; x = x + (500 / 50)) {
+
+    var is = 0;
+    for (let y = 0; y <100000; y = y + 1) {
+        //for (let x = 0; x <1500; x = x + (1500 / 350)) {
             let p = new QPoint({
-                x: x,
-                y: y
+                x: Math.random() * 500,
+                y: Math.random() * 500
             },
             {});
             qtree.insert(p);
-        }
+            is++;
+       // }
     }
 
+    console.log(is);
     window.QCircle = QCircle;
 
-    var t = window.qtree.findInRadius(new window.QCircle({
-        x: 250 + 500 / 2,
-        y: 250 + 500 / 2,
-        r: 50
+   // 
+}
+
+
+
+window.mouseClicked = function(e) {
+    var  t = window.qtree.findInRadius(new window.QCircle({
+        x: e.layerX,
+        y: e.layerY,
+        r: 20
     }));
 
     console.log(t);

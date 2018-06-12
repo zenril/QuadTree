@@ -1,4 +1,5 @@
 class Point {
+
     constructor(pos, data) {
         this.x = pos.x;
         this.y = pos.y;
@@ -8,6 +9,10 @@ class Point {
 
     intersects(point){
         return (this.distance(point) <= point.r + this.r);
+    }
+
+    base(){
+        
     }
 
     distance(point) {
@@ -60,8 +65,11 @@ class QuadTree {
         this.capacity = capacity;
         this.points = [];
         this.divisions = null;
+        this.all = [];
         QuadTree.trigger('create', [this]);
     }
+
+    
 
     static get events (){
         if(!QuadTree.event_bindings) {
@@ -101,6 +109,7 @@ class QuadTree {
 
     insert(point) {
         if(!this.boundary.contains(point)) return;
+        this.all.push(point);
         if(this.points.length < this.capacity){
             QuadTree.trigger('point', [this, point]);
             this.points.push(point);
@@ -110,12 +119,18 @@ class QuadTree {
             }
 
             this.peek(function(qTree){
-                if(!qTree.insert){
-                    console.log(qTree);
-                }
                 qTree.insert(point);
             });
         }
+    }
+
+    insertRandom(data) {
+        var p = new Point({
+            x: Math.random() * this.boundary.w,
+            y: Math.random() * this.boundary.h
+        },data);
+
+        this.insert(p);
     }
 
     findPoints(refPoint, fn, ret) {
@@ -124,8 +139,6 @@ class QuadTree {
         if(!_this.intersectsWithPoint(refPoint)){
             return ret;
         }
-
-        console.log('a');
 
         QuadTree.trigger('peek', [_this]);
 
