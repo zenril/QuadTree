@@ -14,14 +14,14 @@ scope.map = null;
 
 var img;
 w.preload = function() {
-    img = loadImage('/img/a2.png');
+    img = loadImage('/src/img/map.jpg');
 }
 
 w.setup = function() {
     scope.map = new MMap({
         image : img
     });
-    
+    scope.map.loadLines();
     createCanvas(windowWidth, windowHeight);
 };
 
@@ -33,7 +33,10 @@ w.windowResized = function() {
 }
 
 w.draw = function(){
-    background(255);
+    //background("#99774c");
+    scope.map.update();
+
+    clear();
     scope.map.mouse( 
         new MPoint(mouseX, mouseY),
         mouseButton
@@ -44,10 +47,10 @@ w.draw = function(){
 }
 
 w.keyPressed = function() {
-    return scope.map.keyDown(w.keyCode);
+    return scope.map.keyDown(w.keyCode, window.key);
 }
 w.keyReleased = function() {
-    return scope.map.keyUp(w.keyCode);
+    return scope.map.keyUp(w.keyCode, window.key);
 }
 
 w.doubleClicked = function() 

@@ -8,16 +8,20 @@ import { MRect } from './MRect';
 export class MMap {
     constructor(opts) {
         this.lines = [];
+        this.markers = [];
         this.current = null;
         this.measure = null;
         this.image = opts.image;
         this.opts = opts;
-        this.factor = 0.8;
+        this.factor = 0.95;
         this.dragging = false;
         this.canDraw = false;
         this.same = false;
         this.openWidth = 300;
-        this.baseMeasure = 1;
+        this.mainWidth = 300;
+        this.closeWidth = 40;
+        this.baseMeasure = null;
+        this.baseUnit = '';
         this.keys = {};
 
         this.coords = {
@@ -47,7 +51,7 @@ export class MMap {
     }
 
     fireEvent(type, data) {
-        window.dispatchEvent(new CustomEvent('awesome', {
+        window.dispatchEvent(new CustomEvent(type, {
             bubbles: true,
             customData: data
         }));
@@ -55,7 +59,11 @@ export class MMap {
 
     listenEvent(event, cb){
         var _this = this;
-        window.addEventListener('awesome', e => cb.call(_this, [e.customData, e, _this]) );
+        window.addEventListener(event, e => cb.call(_this, [e.customData, e, _this]) );
+    }
+
+    update(){
+        this.openWidth = scope.toolbar.open ? this.mainWidth : this.closeWidth;
     }
 
     scroll(delta) {
@@ -77,10 +85,73 @@ export class MMap {
         ));
     }
 
-    
+    undo() {
+        if(this.current && this.current.points.length){
+            this.current.points.pop();
+        }
+        if(this.current && !this.current.points.length){
+            this.current = null;
+        }
+    }
 
-    keyDown(key) {
-        this.keys[key] = true;
+    shortcuts(){
+        if(this.keys[window.CONTROL] && this.keys["Z"]){
+            this.undo();
+        }
+    }
+
+    saveLines(){
+        window.localStorage['save_baseMeasure_1'] =  JSON.stringify(this.baseMeasure);
+        window.localStorage['save_baseUnit_1'] =  JSON.stringify(this.baseUnit);
+        window.localStorage['save_measure_1'] = JSON.stringify(scope.map.measure);
+        window.localStorage['save_lines_1'] = JSON.stringify(scope.map.lines);
+    }
+
+    loadLines(){
+        var bm = JSON.parse(window.localStorage['save_baseMeasure_1'] || 'null');
+        var bu = JSON.parse(window.localStorage['save_baseUnit_1'] || 'null') ;
+
+        if(bm){
+            this.baseMeasure = bm;
+        }
+
+        if(bu){
+            this.baseUnit = bu;
+        }
+
+        var measure = JSON.parse( window.localStorage['save_measure_1']  || 'null' );
+        if(measure && measure.points && measure.points.origin && measure.points.end){
+            this.measure = new MRange(
+                new MPoint(measure.points.origin.x,measure.points.origin.y),
+                new MPoint(measure.points.end.x,measure.points.end.y)
+            );
+        }
+
+        var lines = JSON.parse( window.localStorage['save_lines_1'] || 'null' );
+        if(lines && lines.length){
+            for (let l = 0; l < lines.length; l++) {
+                var line = lines[l];
+                var mline = new MLine();
+                mline.name = line.name;
+                for (let p = 0; p < line.points.length; p++) {
+                    var point = line.points[p];
+                    var mpoint = new MPoint(point.x,point.y);
+                    mline.points.push(mpoint);
+                }
+                this.lines.push(mline);
+            }
+        }
+
+
+    }
+
+    keyDown(keyCode, key) {
+        if(keyCode){
+            this.keys[keyCode] = true;
+        }
+        if(key){
+            this.keys[key] = true;
+        }
         var preventDefault = true;
 
         if(!!this.keys[window.ALT]){
@@ -91,14 +162,22 @@ export class MMap {
             this.dragging = true;
         }
 
-        if(key == window.SHIFT || key == window.ALT){
+        if(keyCode == window.SHIFT || keyCode == window.ALT){
             preventDefault = false;
         }
+
+        this.shortcuts();
+
         return preventDefault;
     }
 
-    keyUp(key) {
-        this.keys[key] = false;
+    keyUp(keyCode, key) {
+        if(keyCode){
+            this.keys[keyCode] = false;
+        }
+        if(key){
+            this.keys[key] = false;
+        }
         
         if(!this.keys[window.ALT]){
             this.canDraw = this.measure && this.measure.canCalc();
@@ -118,7 +197,11 @@ export class MMap {
 
     doubleClick() {
         this.lines.push(this.current);
-        this.fireEvent('line:new', {});
+        this.saveLines();
+
+        this.fireEvent('line:new', {
+            line : this.current
+        });
         this.current = null;
     }
 
@@ -196,9 +279,7 @@ export class MMap {
         this.startMove();
     }
 
-    addToCurrent() {
-
-        
+    addToCurrent() {       
         if (!!this.keys[window.ALT] || (this.measure && this.measure.points.origin && !this.measure.points.end )) {
             
             this.measure = this.measure || new MRange();
@@ -210,11 +291,12 @@ export class MMap {
             } else if (!this.measure.points.origin) {
                 this.measure.points.origin = this.coords.rMouseP.copy()
             } else if (this.measure.points.origin && !this.measure.points.end) {
-                this.measure.points.end = this.coords.rMouseP.copy()
+                this.measure.points.end = this.coords.rMouseP.copy();
             }
 
             if(this.measure && this.measure.canCalc()){
                 this.canDraw = true;
+                this.saveLines();
                 this.fireEvent('measure:new', { measure : this.measure });
             }
 
@@ -278,9 +360,21 @@ export class MMap {
     }
 
     drawLine(line) {
+
+        if(!line) {
+            return;
+        }
+        var color = line.color,
+            color2 = line.color2;
+
+        if(line.state.selected){
+            color = line.selected;
+            color2 = line.selected;
+        }
+        
         noFill();
         strokeWeight(6);
-        stroke.call(null, line.color);
+        stroke.call(null, color);
 
         beginShape();
         line.render(true);
@@ -288,7 +382,7 @@ export class MMap {
 
         noFill();
         strokeWeight(3);
-        stroke.call(null, line.color2);
+        stroke.call(null, color2);
 
         beginShape();
         line.render(true);

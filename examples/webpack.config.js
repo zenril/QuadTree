@@ -4,8 +4,9 @@ const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 
 const config = {
     devtool: 'source-map',
+    mode: 'development',
     entry:  {
-        app : path.resolve(__dirname, 'src/app.js'),
+        app : path.resolve(__dirname, 'builder/src/app.js'),
         //twitch : path.resolve(__dirname, 'src/twitch.js'),
         // fly : path.resolve(__dirname, 'src/fly.js'),
         // quad : path.resolve(__dirname, 'src/index.js'),
@@ -13,7 +14,7 @@ const config = {
 
     },
     output: {
-        path: path.resolve(__dirname, 'build')
+        path: path.resolve(__dirname, 'builder/build')
     },
     module: {
         rules: [
@@ -40,7 +41,7 @@ const config = {
             // ./public directory is being served
             host: 'localhost',
             port: 3070,
-            server: { baseDir: ['examples'] }
+            server: { baseDir: ['examples/builder'] }
           })
     ]
 };

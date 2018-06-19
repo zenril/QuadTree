@@ -222,7 +222,6 @@ var map = {
 
 w.preload = function() {
     img = loadImage('/img/a2.png');
-    console.log(img);
 }
 
 w.setup = function() {
