@@ -83,6 +83,8 @@
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _scope = __webpack_require__(/*! ./scope */ "./examples/builder/src/scope.js");
+
 var _react = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 
 var _react2 = _interopRequireDefault(_react);
@@ -107,7 +109,12 @@ var App = function (_React$Component) {
     function App(props) {
         _classCallCheck(this, App);
 
-        return _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
+        var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
+
+        _this.state = {
+            stats: []
+        };
+        return _this;
     }
 
     _createClass(App, [{
@@ -117,20 +124,26 @@ var App = function (_React$Component) {
         key: 'componentDidMount',
         value: function componentDidMount() {}
     }, {
+        key: 'onChange',
+        value: function onChange(e) {
+            this.setState({ stats: _scope.scope.items });
+        }
+    }, {
         key: 'render',
         value: function render() {
+            var _this2 = this;
+
             return _react2.default.createElement(
                 'div',
                 { className: 'c-sheet' },
                 _react2.default.createElement(
                     _stat.StatBlock,
-                    null,
-                    _react2.default.createElement(_stat.Stat, { name: 'str', title: 'Strength' }),
-                    _react2.default.createElement(_stat.Stat, { name: 'dex', title: 'Dexterity' }),
-                    _react2.default.createElement(_stat.Stat, { name: 'con', title: 'Constitution' }),
-                    _react2.default.createElement(_stat.Stat, { name: 'int', title: 'Intelligence' }),
-                    _react2.default.createElement(_stat.Stat, { name: 'wis', title: 'Wisdom' }),
-                    _react2.default.createElement(_stat.Stat, { name: 'cha', title: 'Charisma' })
+                    { onChange: function onChange(e) {
+                            return _this2.onChange(e);
+                        } },
+                    this.state.stats.map(function (e) {
+                        return _react2.default.createElement(_stat.Stat, { name: e.code, title: e.title });
+                    })
                 )
             );
         }
@@ -140,6 +153,126 @@ var App = function (_React$Component) {
 }(_react2.default.Component);
 
 _reactDom2.default.render(_react2.default.createElement(App, null), document.getElementById("interface"));
+
+/***/ }),
+
+/***/ "./examples/builder/src/components/icon/Icon.js":
+/*!******************************************************!*\
+  !*** ./examples/builder/src/components/icon/Icon.js ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Icon = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _scope = __webpack_require__(/*! ../../scope */ "./examples/builder/src/scope.js");
+
+var _react = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Icon = exports.Icon = function (_React$Component) {
+    _inherits(Icon, _React$Component);
+
+    function Icon(props) {
+        _classCallCheck(this, Icon);
+
+        var _this = _possibleConstructorReturn(this, (Icon.__proto__ || Object.getPrototypeOf(Icon)).call(this, props));
+
+        _this.state = {
+            data: _scope.scope.getIcon(_this.props.name)
+        };
+        return _this;
+    }
+
+    _createClass(Icon, [{
+        key: 'handleClick',
+        value: function handleClick(e) {
+            var v = !this.state.data.value;
+            this.state.data.value = v;
+
+            if (this.props.onClick) {
+                this.props.onClick(e, this.props.name, v);
+            }
+
+            if (v && this.props.onTrue) {
+                this.props.onTrue(e, this.props.name, v);
+            }
+
+            if (!v && this.props.onFalse) {
+                this.props.onFalse(e, this.props.name, v);
+            }
+
+            this.setState({
+                data: this.state.data
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this2 = this;
+
+            return _react2.default.createElement(
+                'div',
+                { className: 'c-icon', onClick: function onClick(e) {
+                        return _this2.handleClick(e);
+                    } },
+                _react2.default.createElement(
+                    'svg',
+                    { className: this.props.id + ' c-icon_svg' },
+                    _react2.default.createElement('use', { xlinkHref: "../../../svg/symbol-defs.svg#icon-" + this.props.id })
+                )
+            );
+        }
+    }]);
+
+    return Icon;
+}(_react2.default.Component);
+
+/***/ }),
+
+/***/ "./examples/builder/src/components/icon/index.js":
+/*!*******************************************************!*\
+  !*** ./examples/builder/src/components/icon/index.js ***!
+  \*******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _Icon = __webpack_require__(/*! ./Icon */ "./examples/builder/src/components/icon/Icon.js");
+
+Object.defineProperty(exports, 'Icon', {
+  enumerable: true,
+  get: function get() {
+    return _Icon.Icon;
+  }
+});
 
 /***/ }),
 
@@ -191,7 +324,7 @@ var Stat = exports.Stat = function (_React$Component) {
         var _this = _possibleConstructorReturn(this, (Stat.__proto__ || Object.getPrototypeOf(Stat)).call(this, props));
 
         _this.state = {
-            data: null
+            data: _scope.scope.getStat(_this.props.name)
         };
         return _this;
     }
@@ -201,28 +334,16 @@ var Stat = exports.Stat = function (_React$Component) {
         value: function componentWillUnmount() {}
     }, {
         key: 'componentDidMount',
-        value: function componentDidMount() {
-            this.setState({
-                data: _scope.scope.data[this.props.name] || (_scope.scope.data[this.props.name] = {
-                    value: 0,
-                    misc: 0,
-                    mod: 0
-                })
-            });
-        }
+        value: function componentDidMount() {}
     }, {
         key: 'handleChange',
         value: function handleChange(e) {
-
-            var stat = _scope.scope.data[this.props.name];
+            var stat = this.state.data;
             var changed = e.target.name;
             stat[changed] = Number(e.target.value);
 
             stat.mod = Math.floor((stat.value + stat.misc - 10) / 2);
-
             this.setState(stat);
-
-            console.log(stat);
         }
     }, {
         key: 'render',
@@ -244,7 +365,7 @@ var Stat = exports.Stat = function (_React$Component) {
                         'div',
                         { className: 'c-stat-row_input' },
                         _react2.default.createElement('input', {
-                            type: 'number',
+                            type: 'text',
                             id: this.props.name,
                             name: 'value',
                             value: this.state.data.value,
@@ -265,7 +386,7 @@ var Stat = exports.Stat = function (_React$Component) {
                         'div',
                         { className: 'c-stat-row_input' },
                         _react2.default.createElement('input', {
-                            type: 'number',
+                            type: 'text',
                             id: this.props.name + '_misc',
                             name: 'misc',
                             value: this.state.data.misc,
@@ -319,6 +440,8 @@ var _StatBlock = __webpack_require__(/*! ./sass/StatBlock.scss */ "./examples/bu
 
 var _StatBlock2 = _interopRequireDefault(_StatBlock);
 
+var _icon = __webpack_require__(/*! ../icon */ "./examples/builder/src/components/icon/index.js");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -335,7 +458,12 @@ var StatBlock = exports.StatBlock = function (_React$Component) {
 
         var _this = _possibleConstructorReturn(this, (StatBlock.__proto__ || Object.getPrototypeOf(StatBlock)).call(this, props));
 
-        _this.state = {};
+        _this.state = {
+            add: {
+                title: "",
+                code: ""
+            }
+        };
         return _this;
     }
 
@@ -349,12 +477,46 @@ var StatBlock = exports.StatBlock = function (_React$Component) {
         key: 'handleChange',
         value: function handleChange(e) {}
     }, {
+        key: 'addStat',
+        value: function addStat(e, n, v) {
+            var t = _scope.scope.getStat(this.state.add.code, this.state.add.title);
+
+            if (this.props.onChange) {
+                this.props.onChange(this.state.add);
+            }
+        }
+    }, {
+        key: 'onChange',
+        value: function onChange(e) {
+            this.state.add[e.target.name] = e.target.value;
+            this.setState({ add: this.state.add });
+        }
+    }, {
         key: 'render',
         value: function render() {
+            var _this2 = this;
+
             return _react2.default.createElement(
                 'div',
                 { className: 'c-block' },
-                this.props.children
+                _react2.default.createElement(
+                    'div',
+                    { className: 'c-block-utils' },
+                    _react2.default.createElement('input', { name: 'code', type: 'text', value: this.state.add.code || '', onChange: function onChange(e) {
+                            return _this2.onChange(e);
+                        } }),
+                    _react2.default.createElement('input', { name: 'title', type: 'text', value: this.state.add.title || '', onChange: function onChange(e) {
+                            return _this2.onChange(e);
+                        } }),
+                    _react2.default.createElement(_icon.Icon, { id: 'plus', name: 'add-stat', onClick: function onClick(e, n, v) {
+                            _this2.addStat(e, n, v);
+                        } })
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'c-block-list' },
+                    this.props.children
+                )
             );
         }
     }]);
@@ -472,13 +634,53 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Scope = function Scope(props) {
-    _classCallCheck(this, Scope);
+var Scope = function () {
+    function Scope(props) {
+        _classCallCheck(this, Scope);
 
-    this.data = {};
-};
+        this.data = {};
+
+        this.items = [];
+
+        this.blocks = [];
+
+        this.icons = {};
+    }
+
+    _createClass(Scope, [{
+        key: "getStat",
+        value: function getStat(name, title) {
+            if (!this.data[name]) {
+                this.data[name] = {
+                    title: title || "",
+                    code: name || "",
+                    value: 0,
+                    misc: 0,
+                    add: [],
+                    mod: 0
+                };
+                this.items.push(this.data[name]);
+            }
+            return this.data[name];
+        }
+    }, {
+        key: "getIcon",
+        value: function getIcon(name) {
+            if (!this.icons[name]) {
+                this.icons[name] = {
+                    value: false
+                };
+            }
+            return this.icons[name];
+        }
+    }]);
+
+    return Scope;
+}();
 
 var scope = exports.scope = new Scope();
 
@@ -515,7 +717,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../../../node_module
 
 
 // module
-exports.push([module.i, ".c-block {\n  display: flex; }\n", ""]);
+exports.push([module.i, ".c-block-list {\n  display: flex; }\n", ""]);
 
 // exports
 

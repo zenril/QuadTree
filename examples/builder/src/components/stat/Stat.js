@@ -10,7 +10,7 @@ export class Stat extends React.Component
     constructor(props){
         super(props);
         this.state = {
-            data : null
+            data : scope.getStat(this.props.name)
         }
     }
 
@@ -20,31 +20,17 @@ export class Stat extends React.Component
 
     componentDidMount()
     {
-        this.setState({
-            data  : (
-                scope.data[this.props.name] || (scope.data[this.props.name] = {
-                    value : 0,
-                    misc : 0,
-                    mod : 0
-                })
-            )
-        })
     }
 
     handleChange(e){
-
-        var stat =  scope.data[this.props.name];
+        var stat =  this.state.data;
         var changed = e.target.name;
         stat[changed] = Number(e.target.value);
 
-        
         stat.mod = Math.floor(
             (stat.value + stat.misc - 10) /2
         );
-
         this.setState(stat);
-
-        console.log(stat);
     }
 
     render()
@@ -58,7 +44,7 @@ export class Stat extends React.Component
                     </div>
                     <div className="c-stat-row_input">
                         <input
-                            type='number' 
+                            type='text'
                             id={this.props.name}
                             name="value" 
                             value={ this.state.data.value }
@@ -72,7 +58,7 @@ export class Stat extends React.Component
                     </div>
                     <div className="c-stat-row_input">
                         <input
-                            type='number' 
+                            type='text'
                             id={this.props.name + '_misc'}
                             name="misc"
                             value={ this.state.data.misc } 

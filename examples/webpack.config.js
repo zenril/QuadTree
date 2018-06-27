@@ -40,7 +40,7 @@ const config = {
             // browse to http://localhost:3000/ during development,
             // ./public directory is being served
             host: 'localhost',
-            port: 3070,
+            port: 3090,
             server: { baseDir: ['examples/builder'] }
           })
     ]
