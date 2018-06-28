@@ -28,9 +28,12 @@ export class Stat extends React.Component
         stat[changed] = Number(e.target.value);
 
         stat.mod = Math.floor(
-            (stat.value + stat.misc - 10) /2
+            (stat.value + stat.misc - 10) / 2
         );
-        this.setState(stat);
+
+       
+
+        this.setState({ data : stat });
     }
 
     render()

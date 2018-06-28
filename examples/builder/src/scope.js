@@ -25,7 +25,10 @@ class Scope {
                 value : 0,
                 misc : 0,
                 add : [],
-                mod : 0
+                mod : 0,
+                toString : function(){
+                    return this.value;
+                }
             };
             this.items.push(this.data[name]);
         }
