@@ -101,6 +101,10 @@ __webpack_require__(/*! ./thirdparty/mustache-wax */ "./examples/builder/src/thi
 
 var _stat = __webpack_require__(/*! ./components/stat */ "./examples/builder/src/components/stat/index.js");
 
+var _editblock = __webpack_require__(/*! ./components/editblock */ "./examples/builder/src/components/editblock/index.js");
+
+var _AppSettings = __webpack_require__(/*! ./helper/AppSettings */ "./examples/builder/src/helper/AppSettings.js");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -108,8 +112,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var gdad = __webpack_require__(/*! gdrive-appdata */ "./node_modules/gdrive-appdata/src/js/main.js");
 
 var App = function (_React$Component) {
     _inherits(App, _React$Component);
@@ -120,27 +122,7 @@ var App = function (_React$Component) {
         var _this2 = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
         var _this = _this2;
-        window.onLoadCallback = function () {
-            gapi.load('client');
-            gapi.load('auth', function () {
-                var appData = gdad('suecrasseassstosr.json', '775581458798-if8ovf7b014udbbhlt00l1lff6dskmsu.apps.googleusercontent.com');
-                window.appData = appData;
-                appData.read().then(function (data) {
 
-                    _this.handleJson(data);
-                    // do something with data here
-                }, function () {
-                    setTimeout(function () {
-                        appData.read().then(function (data) {
-                            _this.handleJson(data);
-                            // do something with data here
-                        }, function () {
-                            // handle error (show UI button and try to read again; this time it will show the authorize popup)
-                        });
-                    }, 1);w;
-                });
-            });
-        };
         _mustache2.default.Formatters = {
             "add": function add(value, tomath) {
                 return value + tomath;
@@ -157,8 +139,8 @@ var App = function (_React$Component) {
         };
 
         _this2.state = {
-            stats: [],
-            blockEdit: ''
+            stats: _scope.scope.items || (_scope.scope.items = []),
+            blocks: _scope.scope.block || (_scope.scope.block = [])
         };
         return _this2;
     }
@@ -166,22 +148,6 @@ var App = function (_React$Component) {
     _createClass(App, [{
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {}
-    }, {
-        key: 'handleJson',
-        value: function handleJson(data) {
-            console.log(data);
-            if (data.data) {
-                _scope.scope.data = data.data;
-            }
-            if (data.items) {
-                _scope.scope.items = data.items;
-            }
-            if (data.blocks) {
-                _scope.scope.blocks = data.blocks;
-            }
-
-            this.setState({ stats: _scope.scope.items });
-        }
     }, {
         key: 'componentDidMount',
         value: function componentDidMount() {}
@@ -198,12 +164,19 @@ var App = function (_React$Component) {
             });
         }
     }, {
+        key: 'handleNewBlock',
+        value: function handleNewBlock(e) {
+            _scope.scope.blocks.push({
+                value: ""
+            });
+            this.setState({
+                blocks: _scope.scope.blocks
+            });
+        }
+    }, {
         key: 'handleSave',
         value: function handleSave(e) {
-            if (window.appData) {
-                //console.log(JSON.stringify(scope));
-                window.appData.save(_scope.scope);
-            }
+            _AppSettings.settings.save(_scope.scope);
         }
     }, {
         key: 'render',
@@ -233,18 +206,16 @@ var App = function (_React$Component) {
                         return _react2.default.createElement(_stat.Stat, { name: e.code, title: e.title });
                     })
                 ),
-                _react2.default.createElement('textarea', { name: 'block', onChange: function onChange(e) {
-                        return _this3.handleBlockEdit(e);
-                    }, value: this.state.blockEdit || '' }),
                 _react2.default.createElement(
-                    'div',
-                    null,
-                    _react2.default.createElement(
-                        'pre',
-                        null,
-                        blockPreview
-                    )
-                )
+                    'button',
+                    { onClick: function onClick(e) {
+                            return _this3.handleNewBlock(e);
+                        } },
+                    'add'
+                ),
+                this.state.blocks.map(function (i) {
+                    return _react2.default.createElement(_editblock.EditBlock, { block: i });
+                })
             );
         }
     }]);
@@ -252,7 +223,158 @@ var App = function (_React$Component) {
     return App;
 }(_react2.default.Component);
 
-_reactDom2.default.render(_react2.default.createElement(App, null), document.getElementById("interface"));
+_AppSettings.settings.load(function (data) {
+    console.log(data);
+    if (data.data) {
+        _scope.scope.data = data.data;
+    }
+    if (data.items) {
+        _scope.scope.items = data.items;
+    }
+    if (data.blocks) {
+        _scope.scope.blocks = data.blocks;
+    }
+
+    _reactDom2.default.render(_react2.default.createElement(App, null), document.getElementById("interface"));
+});
+
+/***/ }),
+
+/***/ "./examples/builder/src/components/editblock/EditBlock.js":
+/*!****************************************************************!*\
+  !*** ./examples/builder/src/components/editblock/EditBlock.js ***!
+  \****************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.EditBlock = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _scope = __webpack_require__(/*! ../../scope */ "./examples/builder/src/scope.js");
+
+var _react = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _icon = __webpack_require__(/*! ../icon */ "./examples/builder/src/components/icon/index.js");
+
+var _mustache = __webpack_require__(/*! mustache */ "./node_modules/mustache/mustache.js");
+
+var _mustache2 = _interopRequireDefault(_mustache);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+//import style from './sass/StatBlock.scss';
+
+
+var EditBlock = exports.EditBlock = function (_React$Component) {
+    _inherits(EditBlock, _React$Component);
+
+    function EditBlock(props) {
+        _classCallCheck(this, EditBlock);
+
+        var _this = _possibleConstructorReturn(this, (EditBlock.__proto__ || Object.getPrototypeOf(EditBlock)).call(this, props));
+
+        _this.state = {
+            edit: _this.props.block
+        };
+        return _this;
+    }
+
+    _createClass(EditBlock, [{
+        key: 'componentWillUnmount',
+        value: function componentWillUnmount() {}
+    }, {
+        key: 'componentDidMount',
+        value: function componentDidMount() {}
+    }, {
+        key: 'handleChange',
+        value: function handleChange(e) {}
+    }, {
+        key: 'onChange',
+        value: function onChange(e) {
+            //console.log('a');
+            this.state.edit.value = e.target.value;
+            this.setState({ edit: this.state.edit });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this2 = this;
+
+            var blockPreview = '';
+
+            try {
+                var tt = _mustache2.default.render(this.state.edit.value, _scope.scope.data);
+                if (tt) {
+                    blockPreview = tt;
+                } else {
+                    console.log(tt);
+                }
+            } catch (e) {}
+
+            return _react2.default.createElement(
+                'div',
+                { className: 'c-edit-block' },
+                _react2.default.createElement(
+                    'div',
+                    { className: 'c-edit-block-utils' },
+                    _react2.default.createElement('textarea', { name: 'edit', onChange: function onChange(e) {
+                            return _this2.onChange(e);
+                        }, value: this.state.edit.value || '' })
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'c-block-list' },
+                    blockPreview
+                )
+            );
+        }
+    }]);
+
+    return EditBlock;
+}(_react2.default.Component);
+
+/***/ }),
+
+/***/ "./examples/builder/src/components/editblock/index.js":
+/*!************************************************************!*\
+  !*** ./examples/builder/src/components/editblock/index.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _EditBlock = __webpack_require__(/*! ./EditBlock */ "./examples/builder/src/components/editblock/EditBlock.js");
+
+Object.defineProperty(exports, 'EditBlock', {
+  enumerable: true,
+  get: function get() {
+    return _EditBlock.EditBlock;
+  }
+});
 
 /***/ }),
 
@@ -718,6 +840,126 @@ var update = __webpack_require__(/*! ../../../../../../node_modules/style-loader
 if(content.locals) module.exports = content.locals;
 
 if(false) {}
+
+/***/ }),
+
+/***/ "./examples/builder/src/helper/AppSettings.js":
+/*!****************************************************!*\
+  !*** ./examples/builder/src/helper/AppSettings.js ***!
+  \****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.settings = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _gdriveAppdata = __webpack_require__(/*! gdrive-appdata */ "./node_modules/gdrive-appdata/src/js/main.js");
+
+var _gdriveAppdata2 = _interopRequireDefault(_gdriveAppdata);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var AppSettings = function () {
+    _createClass(AppSettings, [{
+        key: 'debounce',
+        value: function debounce(a) {
+            var b = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 250;
+            var c = arguments[2];
+
+            return function () {
+                for (var _len = arguments.length, d = Array(_len), _key = 0; _key < _len; _key++) {
+                    d[_key] = arguments[_key];
+                }
+
+                return clearTimeout(c, c = setTimeout(function () {
+                    return a.apply(undefined, d);
+                }, b));
+            };
+        }
+    }]);
+
+    function AppSettings() {
+        _classCallCheck(this, AppSettings);
+    }
+
+    _createClass(AppSettings, [{
+        key: 'load',
+        value: function load(cb) {
+            var _this2 = this;
+
+            var _this = this;
+            this.settings = null;
+            this.tries = 0;
+            this.addScript(function (api) {
+
+                api.load('client:auth', function (_) {
+                    _this2.settingsInit(cb);
+                });
+            });
+        }
+    }, {
+        key: 'failedToInit',
+        value: function failedToInit() {
+            var _this3 = this;
+
+            this.retry = this.retry || this.debounce(function (e) {
+                _this3.settingsInit();
+            }, 3000);
+            this.retry();
+        }
+    }, {
+        key: 'settingsInit',
+        value: function settingsInit(cb) {
+            var _this4 = this;
+
+            this.tries++;
+            this.gdad = (0, _gdriveAppdata2.default)('appdata.json', '775581458798-if8ovf7b014udbbhlt00l1lff6dskmsu.apps.googleusercontent.com');
+            this.gdad.read().then(function (data) {
+                cb.call(this, data);
+            }, function (e) {
+                _this4.failedToInit();
+            });
+        }
+    }, {
+        key: 'save',
+        value: function save(data) {
+            var _this5 = this;
+
+            this._save = this._save || this.debounce(function (saveData) {
+                _this5.gdad.save(saveData);
+            }, 500);
+
+            this._save(data);
+        }
+    }, {
+        key: 'addScript',
+        value: function addScript(cb) {
+            var script = document.createElement('script'),
+                _this = this;
+
+            script.type = 'text/javascript';
+            script.src = 'https://apis.google.com/js/platform.js';
+            script.onload = function (e) {
+                _this.api = window.gapi;
+                cb(_this.api, e);
+            };
+            document.getElementsByTagName('head')[0].appendChild(script);
+        }
+    }]);
+
+    return AppSettings;
+}();
+
+var settings = exports.settings = new AppSettings();
 
 /***/ }),
 

@@ -3,41 +3,23 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Mustache from 'mustache';
 import './thirdparty/mustache-wax';
-var gdad = require('gdrive-appdata');
+
 
 
 import { Stat, StatBlock } from './components/stat';
+import { EditBlock } from './components/editblock';
+import { settings } from './helper/AppSettings';
 
 
 class App extends React.Component
 {
     constructor(props){
         super(props);
-//offovf need to figiur eout
         
         var _this = this;
-        window.onLoadCallback = function(){
-            gapi.load('client');
-            gapi.load('auth', function(){
-            var appData = gdad('suecrasseassstosr.json', '775581458798-if8off7b014udbbhlt00l1lff6dskmsu.apps.googleusercontent.com');
-                window.appData = appData;
-            appData.read().then(function (data) {
+       
 
-            _this.handleJson(data);
-            // do something with data here
-          }, function () {
-            setTimeout(function(){
-                appData.read().then(function (data) {
-                    _this.handleJson(data);
-                    // do something with data here
-                  }, function () {
-                    // handle error (show UI button and try to read again; this time it will show the authorize popup)
-                  });
-            }, 1);
-          });
-        });
-
-    }
+    
         Mustache.Formatters = {
             "add": function (value, tomath) {
                 return value + tomath;
@@ -55,8 +37,8 @@ class App extends React.Component
 
 
         this.state = {
-            stats : [],
-            blockEdit : ''
+            stats : scope.items || (scope.items = []),
+            blocks : scope.block || (scope.block = [])
         }
     }
 
@@ -64,20 +46,6 @@ class App extends React.Component
     {
     }
 
-    handleJson(data) {
-        console.log(data);
-        if(data.data) {
-            scope.data = data.data;
-        }
-        if(data.items){
-            scope.items = data.items;
-        }
-        if(data.blocks){
-            scope.blocks = data.blocks;
-        }
-
-        this.setState({ stats : scope.items });
-    }
     componentDidMount()
     {
 
@@ -93,11 +61,17 @@ class App extends React.Component
         });
     }
 
+    handleNewBlock(e){
+        scope.blocks.push({
+            value : ""
+        });
+        this.setState({
+            blocks : scope.blocks
+        });
+    }
+
     handleSave(e) {
-        if(window.appData){
-            //console.log(JSON.stringify(scope));
-            window.appData.save(scope);
-        }
+        settings.save(scope);
     }
 
     render()
@@ -112,25 +86,41 @@ class App extends React.Component
             <div className="c-sheet">
             <button onClick={e => this.handleSave(e)}>save</button>
                 <StatBlock onChange={ e => this.onChange(e) }>
+                    
                     {
                         this.state.stats.map( e => {
                             return <Stat name={e.code} title={e.title}/>
                         })
                     }
                 </StatBlock>
-
-                <textarea name='block' onChange={e => this.handleBlockEdit(e)} value={this.state.blockEdit || ''}>
-                    
-                </textarea>
-
-                <div>
-                    <pre>
-                    {blockPreview}
-                    </pre>
-                </div>
+                <button onClick={ e => this.handleNewBlock(e) } >
+                add</button>
+                {
+                    this.state.blocks.map( i => {
+                        return (
+                            <EditBlock block={i}/>
+                        );
+                    })
+                }
             </div>
         );
     }
 }
 
-ReactDOM.render(<App />, document.getElementById("interface")); 
+
+settings.load(function(data){
+    console.log(data);
+    if(data.data) {
+        scope.data = data.data;
+    }
+    if(data.items){
+        scope.items = data.items;
+    }
+    if(data.blocks){
+        scope.blocks = data.blocks;
+    }
+
+    ReactDOM.render(<App />, document.getElementById("interface")); 
+});
+
+
