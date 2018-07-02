@@ -13,31 +13,31 @@ export class EditBlock extends React.Component
         this.state = {
             edit : this.props.block
         };
-    }
+        var _this = this;
 
-    componentWillUnmount()
-    {
-    }
-
-    componentDidMount()
-    {
-    }
-
-    handleChange(e){
+        scope.on(['stat:update', 'scope:save'], e => {
+            _this.forceUpdate();
+        });
     }
 
     onChange(e){
-        //console.log('a');
         this.state.edit.value = e.target.value;
         this.setState({ edit : this.state.edit });
+        scope.fire(['scope:save'], this.state.edit);
+    }
 
-        
+    onDelete(){
+        this.state.edit.deleted = true;
+        this.setState({ edit : this.state.edit },
+        function(){
+            scope.fire(['block:delete', 'scope:save'], this.state.edit);
+        });
     }
 
     render()
     {
 
-        
+
         var blockPreview = '';
 
         try{
@@ -45,22 +45,25 @@ export class EditBlock extends React.Component
             if(tt){
                 blockPreview = tt;
             } else {
-                console.log(tt);
             }
         } catch (e) {
         }
 
         return (
             <div className="c-edit-block">
+                <button onClick={ e => this.onDelete(e) } >
+                    delete
+                </button>
+
                 <div className="c-edit-block-utils">
                     <textarea name='edit' onChange={ e => this.onChange(e) } value={this.state.edit.value || ''}>
-                    
+
                     </textarea>
                 </div>
- 
+
                 <div className="c-block-list">
                     { blockPreview }
-                </div>                
+                </div>
             </div>
         );
     }

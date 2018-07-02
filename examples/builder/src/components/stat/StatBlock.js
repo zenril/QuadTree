@@ -31,8 +31,10 @@ export class StatBlock extends React.Component
     addStat(e,n,v) {
         var t = scope.getStat(
             this.state.add.code,
-            this.state.add.title            
+            this.state.add.title
         );
+
+        scope.fire(['scope:save'], this.state.edit);
 
         if(this.props.onChange){
             this.props.onChange(this.state.add);
@@ -53,10 +55,10 @@ export class StatBlock extends React.Component
                     <input name="title" type='text' value={this.state.add.title || ''} onChange={ e => this.onChange(e) } />
                     <Icon id="plus" name="add-stat" onClick={ (e, n, v)  => { this.addStat(e, n, v)}} />
                 </div>
- 
+
                 <div className="c-block-list">
                     { this.props.children }
-                </div>                
+                </div>
             </div>
         );
     }

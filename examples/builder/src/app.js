@@ -7,7 +7,7 @@ import './thirdparty/mustache-wax';
 
 
 import { Stat, StatBlock } from './components/stat';
-import { EditBlock } from './components/editblock';
+import { EditBlock, EditBlockModel } from './components/editblock';
 import { settings } from './helper/AppSettings';
 
 
@@ -15,11 +15,8 @@ class App extends React.Component
 {
     constructor(props){
         super(props);
-        
         var _this = this;
-       
 
-    
         Mustache.Formatters = {
             "add": function (value, tomath) {
                 return value + tomath;
@@ -35,11 +32,18 @@ class App extends React.Component
             }
         }
 
-
         this.state = {
             stats : scope.items || (scope.items = []),
-            blocks : scope.block || (scope.block = [])
+            blocks : scope.blocks || (scope.blocks = [])
         }
+
+        scope.on(['stat:delete', 'block:delete'], e => {
+            _this.forceUpdate();
+        });
+
+        scope.on(['scope:save'], e => {
+            settings.save(scope);
+        });
     }
 
     componentWillUnmount()
@@ -55,16 +59,9 @@ class App extends React.Component
         this.setState({ stats : scope.items });
     }
 
-    handleBlockEdit(e){
-        this.setState({
-            blockEdit : e.target.value
-        });
-    }
-
     handleNewBlock(e){
-        scope.blocks.push({
-            value : ""
-        });
+        scope.blocks.push(new EditBlockModel());
+
         this.setState({
             blocks : scope.blocks
         });
@@ -76,29 +73,23 @@ class App extends React.Component
 
     render()
     {
-        var blockPreview = '';
-        try{
-            blockPreview = Mustache.render(this.state.blockEdit, scope.data);
-        } catch (e) {
-
-        }
         return (
             <div className="c-sheet">
             <button onClick={e => this.handleSave(e)}>save</button>
                 <StatBlock onChange={ e => this.onChange(e) }>
-                    
+
                     {
-                        this.state.stats.map( e => {
-                            return <Stat name={e.code} title={e.title}/>
+                        this.state.stats.filter( e => !e.deleted ).map( (e, i) => {
+                            return <Stat key={i} name={e.code} title={e.title}/>
                         })
                     }
                 </StatBlock>
                 <button onClick={ e => this.handleNewBlock(e) } >
                 add</button>
                 {
-                    this.state.blocks.map( i => {
+                    this.state.blocks.filter( e => !e.deleted ).map( (e, i) => {
                         return (
-                            <EditBlock block={i}/>
+                            <EditBlock key={i} block={e}/>
                         );
                     })
                 }
@@ -109,18 +100,15 @@ class App extends React.Component
 
 
 settings.load(function(data){
-    console.log(data);
-    if(data.data) {
-        scope.data = data.data;
-    }
     if(data.items){
-        scope.items = data.items;
-    }
-    if(data.blocks){
-        scope.blocks = data.blocks;
+        scope.loadStats(data.items);
     }
 
-    ReactDOM.render(<App />, document.getElementById("interface")); 
+    if(data.blocks){
+        scope.loadBlocks(data.blocks);
+    }
+
+    ReactDOM.render(<App />, document.getElementById("interface"));
 });
 
 
