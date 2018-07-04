@@ -1,5 +1,6 @@
 import { StatModel } from './components/stat';
 import { EditBlockModel } from './components/editblock';
+import uuidv4 from 'uuid/v4';
 import { type } from 'os';
 class Scope {
     constructor(props){
@@ -71,6 +72,17 @@ class Scope {
     };
 
     fire (event, data) {
+        
+        
+        if(typeof event != 'string'){
+            for (let i = 0; i < event.length; i++) {
+                const ev = event[i];
+                this.fire(ev, data);
+            }
+            return;
+        }
+
+
         if (!this.events || !this.events[event]) return;
         this.events[event].forEach(cb => {
             if(typeof cb == 'function') cb.call(this, data);

@@ -1,7 +1,9 @@
+import uuidv4 from 'uuid/v4';
 export class StatModel
 {
     constructor(conf){
         conf = conf || {};
+        this.id = conf.id || uuidv4();
         this.title  = conf.title    || "";
         this.code   = conf.code     || "";
         this.value  = conf.value    || 0;

@@ -5,3 +5,23 @@
 .c-block-list{
     display:flex;
 }
+
+.c-edit-block{
+    border: 1px solid black;
+    margin: 10px;
+    padding: 10px;
+}
+
+.c-blockcols {
+    display:flex;
+}
+
+.c-blockcols-list {
+    min-width: 300px;
+    max-width: 700px;
+    padding: 0 0 0 10px;
+    textarea {
+        width: 650px;
+        height:  300px;
+    }
+}

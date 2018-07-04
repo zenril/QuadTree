@@ -1,7 +1,6 @@
 import { scope } from './scope';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Mustache from 'mustache';
 import './thirdparty/mustache-wax';
 
 
@@ -16,21 +15,6 @@ class App extends React.Component
     constructor(props){
         super(props);
         var _this = this;
-
-        Mustache.Formatters = {
-            "add": function (value, tomath) {
-                return value + tomath;
-            },
-            "sub": function (value, tomath) {
-                return value - tomath;
-            },
-            "div": function (value, tomath) {
-                return value / tomath;
-            },
-            "multi": function (value, tomath) {
-                return value * tomath;
-            }
-        }
 
         this.state = {
             stats : scope.items || (scope.items = []),
@@ -52,15 +36,16 @@ class App extends React.Component
 
     componentDidMount()
     {
-
     }
 
     onChange(e){
         this.setState({ stats : scope.items });
     }
 
-    handleNewBlock(e){
-        scope.blocks.push(new EditBlockModel());
+    handleNewBlock(e, data){
+        scope.blocks.push(new EditBlockModel({
+            column : data.column
+        }));
 
         this.setState({
             blocks : scope.blocks
@@ -76,23 +61,41 @@ class App extends React.Component
         return (
             <div className="c-sheet">
             <button onClick={e => this.handleSave(e)}>save</button>
+                
                 <StatBlock onChange={ e => this.onChange(e) }>
-
                     {
-                        this.state.stats.filter( e => !e.deleted ).map( (e, i) => {
-                            return <Stat key={i} name={e.code} title={e.title}/>
+                        this.state.stats.filter( e => !e.deleted ).map((e, i) => {
+                            return <Stat key={e.id} name={e.code} title={e.title}/>
                         })
                     }
                 </StatBlock>
-                <button onClick={ e => this.handleNewBlock(e) } >
-                add</button>
-                {
-                    this.state.blocks.filter( e => !e.deleted ).map( (e, i) => {
-                        return (
-                            <EditBlock key={i} block={e}/>
-                        );
-                    })
-                }
+                
+                <div className='c-blockcols'>
+                    <div className='c-blockcols-list'>
+                        <button onClick={ e => this.handleNewBlock(e, { column : 1 })}>ADD col 1</button>
+                        {
+                            this.state.blocks.filter( e => !e.deleted && e.column == 1 ).map( (e, i) => {
+                                return (
+                                    <EditBlock key={e.id} block={e} />
+                                );
+                            })
+                        }
+                    </div>
+
+                    <div className='c-blockcols-list'>
+                        <button onClick={ e => this.handleNewBlock(e, { column : 2 })}>ADD col 2</button>
+                        {
+                            this.state.blocks.filter( e => !e.deleted && e.column == 2 ).map( (e, i) => {
+                                return (
+                                    <EditBlock key={e.id} block={e} />
+                                );
+                            })
+                        }
+                    </div>
+                    
+                </div>
+
+
             </div>
         );
     }
@@ -100,11 +103,12 @@ class App extends React.Component
 
 
 settings.load(function(data){
-    if(data.items){
+
+    if(data.items) {
         scope.loadStats(data.items);
     }
 
-    if(data.blocks){
+    if(data.blocks) {
         scope.loadBlocks(data.blocks);
     }
 

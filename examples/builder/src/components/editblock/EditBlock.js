@@ -3,17 +3,21 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 //import style from './sass/StatBlock.scss';
 import { Icon } from '../icon';
-import Mustache from 'mustache';
+import nunJucks from 'nunjucks';
+import ReactMarkdown from 'react-markdown';
 
 export class EditBlock extends React.Component
 {
-
     constructor(props){
         super(props);
         this.state = {
-            edit : this.props.block
+            edit : this.props.block,
+            editMode : false
         };
+        this.blockPreview  = '';
         var _this = this;
+
+        nunJucks.configure({ autoescape: true });
 
         scope.on(['stat:update', 'scope:save'], e => {
             _this.forceUpdate();
@@ -34,17 +38,21 @@ export class EditBlock extends React.Component
         });
     }
 
+    onEdit(){
+        this.setState({
+            editMode  : !this.state.editMode
+        });
+    }
+
     render()
     {
-
-
-        var blockPreview = '';
-
+       
         try{
-            var tt = Mustache.render(this.state.edit.value, scope.data);
+            var tt = nunJucks.renderString(this.state.edit.value, scope.data);
             if(tt){
-                blockPreview = tt;
+                this.blockPreview = tt;
             } else {
+
             }
         } catch (e) {
         }
@@ -55,14 +63,25 @@ export class EditBlock extends React.Component
                     delete
                 </button>
 
-                <div className="c-edit-block-utils">
-                    <textarea name='edit' onChange={ e => this.onChange(e) } value={this.state.edit.value || ''}>
+                <button onClick={ e => this.onEdit(e) } >
+                    { this.state.editMode ? 'view mode' : 'edit mode' }
+                </button>
 
-                    </textarea>
-                </div>
+                {
+                    this.state.editMode ? 
+                        <div className="c-edit-block-utils">
+                            <textarea 
+                                name='edit' 
+                                onChange={ e => this.onChange(e) }
+                                value={ this.state.edit.value || '' }>
+                            </textarea>
+                        </div>
+                    : 
+                        ''
+                }
 
-                <div className="c-block-list">
-                    { blockPreview }
+                <div className="c-block-preview">
+                    <ReactMarkdown source={ this.blockPreview } />
                 </div>
             </div>
         );
