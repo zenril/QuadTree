@@ -30,13 +30,13 @@ export class EditBlock extends React.Component
         scope.fire(['scope:save'], this.state.edit);
     }
 
-    onDelete(){
-        this.state.edit.deleted = true;
-        this.setState({ edit : this.state.edit },
-        function(){
-            scope.fire(['block:delete', 'scope:save'], this.state.edit);
-        });
-    }
+    // onDelete(){
+    //     this.state.edit.deleted = true;
+    //     this.setState({ edit : this.state.edit },
+    //     function(){
+    //         scope.fire(['block:delete', 'scope:save'], this.state.edit);
+    //     });
+    // }
 
     onEdit(){
         this.setState({
@@ -59,9 +59,9 @@ export class EditBlock extends React.Component
 
         return (
             <div className="c-edit-block">
-                <button onClick={ e => this.onDelete(e) } >
+                {/* <button onClick={ e => this.onDelete(e) } >
                     delete
-                </button>
+                </button> */}
 
                 <button onClick={ e => this.onEdit(e) } >
                     { this.state.editMode ? 'view mode' : 'edit mode' }

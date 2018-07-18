@@ -322,14 +322,15 @@ var EditBlock = exports.EditBlock = function (_React$Component) {
             this.setState({ edit: this.state.edit });
             _scope.scope.fire(['scope:save'], this.state.edit);
         }
-    }, {
-        key: 'onDelete',
-        value: function onDelete() {
-            this.state.edit.deleted = true;
-            this.setState({ edit: this.state.edit }, function () {
-                _scope.scope.fire(['block:delete', 'scope:save'], this.state.edit);
-            });
-        }
+
+        // onDelete(){
+        //     this.state.edit.deleted = true;
+        //     this.setState({ edit : this.state.edit },
+        //     function(){
+        //         scope.fire(['block:delete', 'scope:save'], this.state.edit);
+        //     });
+        // }
+
     }, {
         key: 'onEdit',
         value: function onEdit() {
@@ -352,13 +353,6 @@ var EditBlock = exports.EditBlock = function (_React$Component) {
             return _react2.default.createElement(
                 'div',
                 { className: 'c-edit-block' },
-                _react2.default.createElement(
-                    'button',
-                    { onClick: function onClick(e) {
-                            return _this3.onDelete(e);
-                        } },
-                    'delete'
-                ),
                 _react2.default.createElement(
                     'button',
                     { onClick: function onClick(e) {
@@ -680,13 +674,6 @@ var Stat = exports.Stat = function (_React$Component) {
             return this.state.data == null ? '' : _react2.default.createElement(
                 'div',
                 { className: 'c-stat' },
-                _react2.default.createElement(
-                    'button',
-                    { onClick: function onClick(e) {
-                            return _this2.onDelete(e);
-                        } },
-                    'delete'
-                ),
                 _react2.default.createElement(
                     'div',
                     { className: 'c-stat-row' },

@@ -49,9 +49,9 @@ export class Stat extends React.Component
     {
         return this.state.data == null ? '' : (
             <div className="c-stat">
-                <button onClick={ e => this.onDelete(e) } >
+                {/* <button onClick={ e => this.onDelete(e) } >
                     delete
-                </button>
+                </button> */}
 
                 <div className="c-stat-row">
                     <div className="c-stat-row_label">
