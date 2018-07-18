@@ -5,8 +5,9 @@ import './thirdparty/mustache-wax';
 
 
 
-import { Stat, StatBlock } from './components/stat';
+import { Stat, StatBlock, BasicStat } from './components/stat';
 import { EditBlock, EditBlockModel } from './components/editblock';
+import { Icon } from './components/icon';
 import { settings } from './helper/AppSettings';
 
 
@@ -18,15 +19,25 @@ class App extends React.Component
 
         this.state = {
             stats : scope.items || (scope.items = []),
-            blocks : scope.blocks || (scope.blocks = [])
+            basicStats : scope.basicItems || (scope.basicItems = []),
+            blocks : scope.blocks || (scope.blocks = []),
+            editStats : false,
+            dialog : null,
         }
 
-        scope.on(['stat:delete', 'block:delete'], e => {
+        scope.on(['stat:delete', 'block:delete', 'stat:update'], e => {
             _this.forceUpdate();
         });
+        
 
         scope.on(['scope:save'], e => {
             settings.save(scope);
+        });
+
+        scope.on(['confirmation:request'], e => {
+            this.setState({
+                dialog : e
+            });
         });
     }
 
@@ -38,8 +49,34 @@ class App extends React.Component
     {
     }
 
+    onBasicChange(e){
+        this.setState({ stats : scope.basicItems });
+        //scope.populateData();
+    }
+
     onChange(e){
         this.setState({ stats : scope.items });
+        //scope.populateData();
+    }
+
+    handleDialogDelete(e){
+        if(this.state.dialog){
+            this.state.dialog.confirm(e);
+        }
+
+        this.setState({
+            dialog : null
+        });
+    }
+
+    handleDialogCancel(e){
+        if(this.state.dialog){
+            this.state.dialog.cancel(e);
+        }
+
+        this.setState({
+            dialog : null
+        });
     }
 
     handleNewBlock(e, data){
@@ -52,23 +89,42 @@ class App extends React.Component
         });
     }
 
+    handleStatEdit(e){
+        this.setState({
+            editStats : !this.state.editStats
+        });
+    }
+
     handleSave(e) {
         settings.save(scope);
     }
 
     render()
-    {
+    {   
+        
         return (
             <div className="c-sheet">
             <button onClick={e => this.handleSave(e)}>save</button>
                 
-                <StatBlock onChange={ e => this.onChange(e) }>
+                <StatBlock onChange={ e => this.onChange(e) }> 
+
+                    <Icon id="enlarge" name="add-stat" onClick={e => this.handleStatEdit(e)} />    
+                    
+                    {
+                        this.state.stats.filter( e => !e.deleted ).map((e, i) => {
+                            return <Stat key={e.id} stat={e} editMode={this.state.editStats} />
+                        })
+                    }
+                </StatBlock>
+
+
+                {/* <StatBlock onChange={ e => this.onBasicChange(e) }>
                     {
                         this.state.stats.filter( e => !e.deleted ).map((e, i) => {
                             return <Stat key={e.id} name={e.code} title={e.title}/>
                         })
                     }
-                </StatBlock>
+                </StatBlock> */}
                 
                 <div className='c-blockcols'>
                     <div className='c-blockcols-list'>
@@ -94,6 +150,20 @@ class App extends React.Component
                     </div>
                     
                 </div>
+
+                {
+                    this.state.dialog ? (
+                        <div className="c-dialog">
+                            <div className="c-dialog-box">
+                                <div className="c-dialog-box--message">Are you sure?</div>
+                                <div className="c-dialog-box--actions">
+                                    <button className="c-dialog-box--confirm" onClick={ e => this.handleDialogDelete(e) }>DELETE MY SHIT</button>
+                                    <button className="c-dialog-box--cancel" onClick={ e => this.handleDialogCancel(e) }>Dialog go away</button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : ''
+                }
 
 
             </div>

@@ -1,6 +1,7 @@
 import { scope } from '../../scope';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import style from './sass/Icon.scss';
 
 export class Icon extends React.Component
 {

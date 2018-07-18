@@ -99,6 +99,8 @@ var _stat = __webpack_require__(/*! ./components/stat */ "./examples/builder/src
 
 var _editblock = __webpack_require__(/*! ./components/editblock */ "./examples/builder/src/components/editblock/index.js");
 
+var _icon = __webpack_require__(/*! ./components/icon */ "./examples/builder/src/components/icon/index.js");
+
 var _AppSettings = __webpack_require__(/*! ./helper/AppSettings */ "./examples/builder/src/helper/AppSettings.js");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -121,15 +123,24 @@ var App = function (_React$Component) {
 
         _this2.state = {
             stats: _scope.scope.items || (_scope.scope.items = []),
-            blocks: _scope.scope.blocks || (_scope.scope.blocks = [])
+            basicStats: _scope.scope.basicItems || (_scope.scope.basicItems = []),
+            blocks: _scope.scope.blocks || (_scope.scope.blocks = []),
+            editStats: false,
+            dialog: null
         };
 
-        _scope.scope.on(['stat:delete', 'block:delete'], function (e) {
+        _scope.scope.on(['stat:delete', 'block:delete', 'stat:update'], function (e) {
             _this.forceUpdate();
         });
 
         _scope.scope.on(['scope:save'], function (e) {
             _AppSettings.settings.save(_scope.scope);
+        });
+
+        _scope.scope.on(['confirmation:request'], function (e) {
+            _this2.setState({
+                dialog: e
+            });
         });
         return _this2;
     }
@@ -141,9 +152,38 @@ var App = function (_React$Component) {
         key: 'componentDidMount',
         value: function componentDidMount() {}
     }, {
+        key: 'onBasicChange',
+        value: function onBasicChange(e) {
+            this.setState({ stats: _scope.scope.basicItems });
+            //scope.populateData();
+        }
+    }, {
         key: 'onChange',
         value: function onChange(e) {
             this.setState({ stats: _scope.scope.items });
+            //scope.populateData();
+        }
+    }, {
+        key: 'handleDialogDelete',
+        value: function handleDialogDelete(e) {
+            if (this.state.dialog) {
+                this.state.dialog.confirm(e);
+            }
+
+            this.setState({
+                dialog: null
+            });
+        }
+    }, {
+        key: 'handleDialogCancel',
+        value: function handleDialogCancel(e) {
+            if (this.state.dialog) {
+                this.state.dialog.cancel(e);
+            }
+
+            this.setState({
+                dialog: null
+            });
         }
     }, {
         key: 'handleNewBlock',
@@ -154,6 +194,13 @@ var App = function (_React$Component) {
 
             this.setState({
                 blocks: _scope.scope.blocks
+            });
+        }
+    }, {
+        key: 'handleStatEdit',
+        value: function handleStatEdit(e) {
+            this.setState({
+                editStats: !this.state.editStats
             });
         }
     }, {
@@ -181,10 +228,13 @@ var App = function (_React$Component) {
                     { onChange: function onChange(e) {
                             return _this3.onChange(e);
                         } },
+                    _react2.default.createElement(_icon.Icon, { id: 'enlarge', name: 'add-stat', onClick: function onClick(e) {
+                            return _this3.handleStatEdit(e);
+                        } }),
                     this.state.stats.filter(function (e) {
                         return !e.deleted;
                     }).map(function (e, i) {
-                        return _react2.default.createElement(_stat.Stat, { key: e.id, name: e.code, title: e.title });
+                        return _react2.default.createElement(_stat.Stat, { key: e.id, stat: e, editMode: _this3.state.editStats });
                     })
                 ),
                 _react2.default.createElement(
@@ -222,7 +272,38 @@ var App = function (_React$Component) {
                             return _react2.default.createElement(_editblock.EditBlock, { key: e.id, block: e });
                         })
                     )
-                )
+                ),
+                this.state.dialog ? _react2.default.createElement(
+                    'div',
+                    { className: 'c-dialog' },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'c-dialog-box' },
+                        _react2.default.createElement(
+                            'div',
+                            { className: 'c-dialog-box--message' },
+                            'Are you sure?'
+                        ),
+                        _react2.default.createElement(
+                            'div',
+                            { className: 'c-dialog-box--actions' },
+                            _react2.default.createElement(
+                                'button',
+                                { className: 'c-dialog-box--confirm', onClick: function onClick(e) {
+                                        return _this3.handleDialogDelete(e);
+                                    } },
+                                'DELETE MY SHIT'
+                            ),
+                            _react2.default.createElement(
+                                'button',
+                                { className: 'c-dialog-box--cancel', onClick: function onClick(e) {
+                                        return _this3.handleDialogCancel(e);
+                                    } },
+                                'Dialog go away'
+                            )
+                        )
+                    )
+                ) : ''
             );
         }
     }]);
@@ -323,11 +404,24 @@ var EditBlock = exports.EditBlock = function (_React$Component) {
             _scope.scope.fire(['scope:save'], this.state.edit);
         }
     }, {
-        key: 'onDelete',
-        value: function onDelete() {
+        key: 'deleteAction',
+        value: function deleteAction() {
             this.state.edit.deleted = true;
             this.setState({ edit: this.state.edit }, function () {
                 _scope.scope.fire(['block:delete', 'scope:save'], this.state.edit);
+            });
+        }
+    }, {
+        key: 'onDelete',
+        value: function onDelete() {
+            var _this3 = this;
+
+            _scope.scope.fire(['confirmation:request'], {
+                confirm: function confirm() {
+                    _this3.deleteAction();
+                    _scope.scope.fire(['scope:save'], {});
+                },
+                cancel: function cancel() {}
             });
         }
     }, {
@@ -340,10 +434,10 @@ var EditBlock = exports.EditBlock = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            var _this3 = this;
+            var _this4 = this;
 
             try {
-                var tt = _nunjucks2.default.renderString(this.state.edit.value, _scope.scope.data);
+                var tt = _nunjucks2.default.renderString(this.state.edit.value, _scope.scope.getData());
                 if (tt) {
                     this.blockPreview = tt;
                 } else {}
@@ -352,17 +446,17 @@ var EditBlock = exports.EditBlock = function (_React$Component) {
             return _react2.default.createElement(
                 'div',
                 { className: 'c-edit-block' },
-                _react2.default.createElement(
+                this.state.editMode ? _react2.default.createElement(
                     'button',
                     { onClick: function onClick(e) {
-                            return _this3.onDelete(e);
+                            return _this4.onDelete(e);
                         } },
                     'delete'
-                ),
+                ) : '',
                 _react2.default.createElement(
                     'button',
                     { onClick: function onClick(e) {
-                            return _this3.onEdit(e);
+                            return _this4.onEdit(e);
                         } },
                     this.state.editMode ? 'view mode' : 'edit mode'
                 ),
@@ -372,7 +466,7 @@ var EditBlock = exports.EditBlock = function (_React$Component) {
                     _react2.default.createElement('textarea', {
                         name: 'edit',
                         onChange: function onChange(e) {
-                            return _this3.onChange(e);
+                            return _this4.onChange(e);
                         },
                         value: this.state.edit.value || '' })
                 ) : '',
@@ -499,6 +593,10 @@ var _reactDom = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/i
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
+var _Icon = __webpack_require__(/*! ./sass/Icon.scss */ "./examples/builder/src/components/icon/sass/Icon.scss");
+
+var _Icon2 = _interopRequireDefault(_Icon);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -592,6 +690,161 @@ Object.defineProperty(exports, 'Icon', {
 
 /***/ }),
 
+/***/ "./examples/builder/src/components/icon/sass/Icon.scss":
+/*!*************************************************************!*\
+  !*** ./examples/builder/src/components/icon/sass/Icon.scss ***!
+  \*************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(/*! !../../../../../../node_modules/css-loader!../../../../../../node_modules/sass-loader/lib/loader.js?sourceMap=true!./Icon.scss */ "./node_modules/css-loader/index.js!./node_modules/sass-loader/lib/loader.js?sourceMap=true!./examples/builder/src/components/icon/sass/Icon.scss");
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(/*! ../../../../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {}
+
+/***/ }),
+
+/***/ "./examples/builder/src/components/stat/BasicStat.js":
+/*!***********************************************************!*\
+  !*** ./examples/builder/src/components/stat/BasicStat.js ***!
+  \***********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.BasicStat = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _scope = __webpack_require__(/*! ../../scope */ "./examples/builder/src/scope.js");
+
+var _react = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _Stat = __webpack_require__(/*! ./sass/Stat.scss */ "./examples/builder/src/components/stat/sass/Stat.scss");
+
+var _Stat2 = _interopRequireDefault(_Stat);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var BasicStat = exports.BasicStat = function (_React$Component) {
+    _inherits(BasicStat, _React$Component);
+
+    function BasicStat(props) {
+        _classCallCheck(this, BasicStat);
+
+        var _this = _possibleConstructorReturn(this, (BasicStat.__proto__ || Object.getPrototypeOf(BasicStat)).call(this, props));
+
+        _this.state = {
+            data: _scope.scope.getStat(_this.props.name)
+        };
+        return _this;
+    }
+
+    _createClass(BasicStat, [{
+        key: 'componentWillUnmount',
+        value: function componentWillUnmount() {}
+    }, {
+        key: 'componentDidMount',
+        value: function componentDidMount() {}
+    }, {
+        key: 'handleChange',
+        value: function handleChange(e) {
+            var stat = this.state.data;
+            var changed = e.target.name;
+            stat[changed] = Number(e.target.value);
+
+            stat.mod = Math.floor((stat.value + stat.misc - 10) / 2);
+
+            this.setState({ data: stat }, function () {
+                _scope.scope.fire(['stat:update', 'scope:save'], stat);
+            });
+        }
+    }, {
+        key: 'onDelete',
+        value: function onDelete() {
+            this.state.data.deleted = true;
+            this.setState({ data: this.state.data }, function () {
+                _scope.scope.fire(['stat:delete', 'scope:save'], this.state.data);
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this2 = this;
+
+            return this.state.data == null ? '' : _react2.default.createElement(
+                'div',
+                { className: 'c-stat' },
+                _react2.default.createElement(
+                    'button',
+                    { onClick: function onClick(e) {
+                            return _this2.onDelete(e);
+                        } },
+                    'delete'
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { className: 'c-stat-row' },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'c-stat-row_label' },
+                        this.props.name
+                    ),
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'c-stat-row_input' },
+                        _react2.default.createElement('input', {
+                            type: 'text',
+                            id: this.props.name,
+                            name: 'value',
+                            value: this.state.data.value,
+                            onChange: function onChange(e) {
+                                return _this2.handleChange(e);
+                            } })
+                    )
+                )
+            );
+        }
+    }]);
+
+    return BasicStat;
+}(_react2.default.Component);
+
+/***/ }),
+
 /***/ "./examples/builder/src/components/stat/Stat.js":
 /*!******************************************************!*\
   !*** ./examples/builder/src/components/stat/Stat.js ***!
@@ -640,14 +893,21 @@ var Stat = exports.Stat = function (_React$Component) {
         var _this = _possibleConstructorReturn(this, (Stat.__proto__ || Object.getPrototypeOf(Stat)).call(this, props));
 
         _this.state = {
-            data: _scope.scope.getStat(_this.props.name)
+            data: props.stat || _scope.scope.getStat(_this.props.stat.code, _this.props.stat.title),
+            editMode: props.editMode
         };
         return _this;
     }
 
     _createClass(Stat, [{
-        key: 'componentWillUnmount',
-        value: function componentWillUnmount() {}
+        key: 'componentDidUpdate',
+        value: function componentDidUpdate() {
+            if (this.props.editMode != this.state.editMode) {
+                this.setState({
+                    editMode: this.props.editMode
+                });
+            }
+        }
     }, {
         key: 'componentDidMount',
         value: function componentDidMount() {}
@@ -656,7 +916,12 @@ var Stat = exports.Stat = function (_React$Component) {
         value: function handleChange(e) {
             var stat = this.state.data;
             var changed = e.target.name;
-            stat[changed] = Number(e.target.value);
+
+            if (changed == 'misc' || changed == 'value') {
+                stat[changed] = Number(e.target.value);
+            } else {
+                stat[changed] = e.target.value;
+            }
 
             stat.mod = Math.floor((stat.value + stat.misc - 10) / 2);
 
@@ -665,47 +930,76 @@ var Stat = exports.Stat = function (_React$Component) {
             });
         }
     }, {
-        key: 'onDelete',
-        value: function onDelete() {
+        key: 'deleteAction',
+        value: function deleteAction() {
+            var _this2 = this;
+
             this.state.data.deleted = true;
             this.setState({ data: this.state.data }, function () {
-                _scope.scope.fire(['stat:delete', 'scope:save'], this.state.data);
+                _scope.scope.fire(['stat:delete', 'scope:save'], _this2.state.data);
+            });
+        }
+    }, {
+        key: 'onDelete',
+        value: function onDelete() {
+            var _this3 = this;
+
+            _scope.scope.fire(['confirmation:request'], {
+                confirm: function confirm() {
+                    _this3.deleteAction();
+                    _scope.scope.fire(['scope:save'], {});
+                },
+                cancel: function cancel() {}
             });
         }
     }, {
         key: 'render',
         value: function render() {
-            var _this2 = this;
+            var _this4 = this;
 
             return this.state.data == null ? '' : _react2.default.createElement(
                 'div',
                 { className: 'c-stat' },
-                _react2.default.createElement(
+                this.state.editMode ? _react2.default.createElement(
                     'button',
                     { onClick: function onClick(e) {
-                            return _this2.onDelete(e);
+                            return _this4.onDelete(e);
                         } },
                     'delete'
-                ),
+                ) : '',
                 _react2.default.createElement(
                     'div',
                     { className: 'c-stat-row' },
                     _react2.default.createElement(
                         'div',
                         { className: 'c-stat-row_label' },
-                        this.props.name.toUpperCase()
+                        this.state.editMode ? _react2.default.createElement('input', {
+                            type: 'text',
+                            name: 'code',
+                            value: this.state.data.code,
+                            onChange: function onChange(e) {
+                                return _this4.handleChange(e);
+                            } }) : _react2.default.createElement(
+                            'span',
+                            null,
+                            this.state.data.code
+                        )
                     ),
                     _react2.default.createElement(
                         'div',
                         { className: 'c-stat-row_input' },
-                        _react2.default.createElement('input', {
+                        this.state.editMode ? _react2.default.createElement('input', {
                             type: 'text',
-                            id: this.props.name,
+                            id: this.state.data.name,
                             name: 'value',
                             value: this.state.data.value,
                             onChange: function onChange(e) {
-                                return _this2.handleChange(e);
-                            } })
+                                return _this4.handleChange(e);
+                            } }) : _react2.default.createElement(
+                            'span',
+                            null,
+                            this.state.data.value
+                        )
                     )
                 ),
                 _react2.default.createElement(
@@ -719,14 +1013,18 @@ var Stat = exports.Stat = function (_React$Component) {
                     _react2.default.createElement(
                         'div',
                         { className: 'c-stat-row_input' },
-                        _react2.default.createElement('input', {
+                        this.state.editMode ? _react2.default.createElement('input', {
                             type: 'text',
-                            id: this.props.name + '_misc',
+                            id: this.state.data.code + '_misc',
                             name: 'misc',
                             value: this.state.data.misc,
                             onChange: function onChange(e) {
-                                return _this2.handleChange(e);
-                            } })
+                                return _this4.handleChange(e);
+                            } }) : _react2.default.createElement(
+                            'span',
+                            null,
+                            this.state.data.misc
+                        )
                     )
                 ),
                 _react2.default.createElement(
@@ -813,6 +1111,8 @@ var StatBlock = exports.StatBlock = function (_React$Component) {
     }, {
         key: 'addStat',
         value: function addStat(e, n, v) {
+
+            console.log('a');
             var t = _scope.scope.getStat(this.state.add.code, this.state.add.title);
 
             _scope.scope.fire(['scope:save'], this.state.edit);
@@ -885,6 +1185,15 @@ Object.defineProperty(exports, 'Stat', {
   }
 });
 
+var _BasicStat = __webpack_require__(/*! ./BasicStat */ "./examples/builder/src/components/stat/BasicStat.js");
+
+Object.defineProperty(exports, 'BasicStat', {
+  enumerable: true,
+  get: function get() {
+    return _BasicStat.BasicStat;
+  }
+});
+
 var _StatBlock = __webpack_require__(/*! ./StatBlock */ "./examples/builder/src/components/stat/StatBlock.js");
 
 Object.defineProperty(exports, 'StatBlock', {
@@ -943,6 +1252,7 @@ var StatModel = exports.StatModel = function () {
         this.add = conf.add || [];
         this.mod = conf.mod || 0;
         this.deleted = conf.deleted || false;
+        this.type = conf.type || 'normal';
     }
 
     _createClass(StatModel, [{
@@ -1063,6 +1373,9 @@ var AppSettings = function () {
 
     function AppSettings() {
         _classCallCheck(this, AppSettings);
+
+        //'appdata.json'
+        this.filename = 'appdata.json';
     }
 
     _createClass(AppSettings, [{
@@ -1096,7 +1409,7 @@ var AppSettings = function () {
             var _this4 = this;
 
             this.tries++;
-            this.gdad = (0, _gdriveAppdata2.default)('appdata.json', '775581458798-if8ovf7b014udbbhlt00l1lff6dskmsu.apps.googleusercontent.com');
+            this.gdad = (0, _gdriveAppdata2.default)(this.filename, '775581458798-if8ovf7b014udbbhlt00l1lff6dskmsu.apps.googleusercontent.com');
             this.gdad.read().then(function (data) {
                 cb.call(this, data);
             }, function (e) {
@@ -1176,12 +1489,26 @@ var Scope = function () {
 
         this.items = [];
 
+        this.basicItems = [];
+
         this.blocks = [];
 
         this.icons = {};
     }
 
     _createClass(Scope, [{
+        key: 'getData',
+        value: function getData(key) {
+            var t = {};
+            key = key || 'code';
+
+            [].concat(this.basicItems, this.items).forEach(function (i) {
+                t[i[key]] = i;
+            });
+
+            return t;
+        }
+    }, {
         key: 'loadStats',
         value: function loadStats(stats) {
             var _this = this;
@@ -1191,7 +1518,7 @@ var Scope = function () {
             }).forEach(function (element) {
                 var stat = new _stat.StatModel(element);
                 _this.items.push(stat);
-                _this.data[stat.code] = stat;
+                //this.data[stat.code] = stat;
             });
         }
     }, {
@@ -1209,14 +1536,22 @@ var Scope = function () {
     }, {
         key: 'getStat',
         value: function getStat(name, title) {
-            if (!this.data[name]) {
-                this.data[name] = new _stat.StatModel({
-                    title: title || "",
-                    code: name || ""
-                });
-                this.items.push(this.data[name]);
+
+            var items = [].concat(this.basicItems, this.items).filter(function (i) {
+                return i.code == name;
+            });
+
+            if (items.length) {
+                return items[0];
             }
-            return this.data[name];
+
+            var stat = new _stat.StatModel({
+                title: title || "",
+                code: name || ""
+            });
+
+            this.items.push(stat);
+            return stat;
         }
     }, {
         key: 'getIcon',
@@ -1380,6 +1715,25 @@ function collapse(value) {
 
 /***/ }),
 
+/***/ "./node_modules/css-loader/index.js!./node_modules/sass-loader/lib/loader.js?sourceMap=true!./examples/builder/src/components/icon/sass/Icon.scss":
+/*!***********************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader!./node_modules/sass-loader/lib/loader.js?sourceMap=true!./examples/builder/src/components/icon/sass/Icon.scss ***!
+  \***********************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../../../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, ".c-icon {\n  width: 20px;\n  height: 20px; }\n  .c-icon svg {\n    width: 100%;\n    height: 100%; }\n", ""]);
+
+// exports
+
+
+/***/ }),
+
 /***/ "./node_modules/css-loader/index.js!./node_modules/sass-loader/lib/loader.js?sourceMap=true!./examples/builder/src/components/stat/sass/Stat.scss":
 /*!***********************************************************************************************************************************************!*\
   !*** ./node_modules/css-loader!./node_modules/sass-loader/lib/loader.js?sourceMap=true!./examples/builder/src/components/stat/sass/Stat.scss ***!
@@ -1392,7 +1746,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../../../node_module
 
 
 // module
-exports.push([module.i, ".c-stat {\n  padding: 5px;\n  margin: 5px;\n  width: 120px; }\n\n.c-stat-row {\n  display: flex; }\n\n.c-stat-row_label {\n  min-width: 40px; }\n\n.c-stat-row_input input {\n  padding: 5px 0px 5px 10px;\n  font-size: 16px;\n  border: 1px solid #0a508c;\n  border-radius: 4px;\n  margin: 2px 0;\n  width: 100%; }\n\n.c-stat-row--misc {\n  justify-content: flex-end; }\n  .c-stat-row--misc .c-stat-row_input {\n    max-width: 50px; }\n    .c-stat-row--misc .c-stat-row_input input {\n      font-size: 12px; }\n\n.c-block-preview p, .c-block-preview pre {\n  margin: 2px; }\n\n@media only screen and (max-width: 720px) {\n  /* CSS rules here */ }\n\n@media only screen and (max-width: 1120px) {\n  /* CSS rules here */ }\n\n@media only screen and (max-width: 1600px) {\n  /* CSS rules here */ }\n", ""]);
+exports.push([module.i, ".c-stat {\n  padding: 5px;\n  margin: 5px;\n  width: 120px;\n  border: 1px solid black; }\n\n.c-stat-row {\n  display: flex;\n  justify-content: flex-end; }\n\n.c-stat-row_label {\n  min-width: 40px; }\n\n.c-stat-row_input input {\n  padding: 5px 0px 5px 10px;\n  font-size: 16px;\n  border: 1px solid #0a508c;\n  border-radius: 4px;\n  margin: 2px 0;\n  width: 100%; }\n\n.c-stat-row--misc {\n  justify-content: flex-end; }\n  .c-stat-row--misc .c-stat-row_input {\n    max-width: 50px; }\n    .c-stat-row--misc .c-stat-row_input input {\n      font-size: 12px; }\n\n.c-block-preview p, .c-block-preview pre {\n  margin: 2px; }\n\n.c-stat-mod {\n  justify-content: flex-end;\n  text-align: right; }\n\n@media only screen and (max-width: 720px) {\n  /* CSS rules here */ }\n\n@media only screen and (max-width: 1120px) {\n  /* CSS rules here */ }\n\n@media only screen and (max-width: 1600px) {\n  /* CSS rules here */ }\n", ""]);
 
 // exports
 

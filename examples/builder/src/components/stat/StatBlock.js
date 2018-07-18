@@ -29,6 +29,8 @@ export class StatBlock extends React.Component
     }
 
     addStat(e,n,v) {
+
+        console.log('a');
         var t = scope.getStat(
             this.state.add.code,
             this.state.add.title

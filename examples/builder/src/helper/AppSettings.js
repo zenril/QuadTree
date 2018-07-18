@@ -8,6 +8,8 @@ class AppSettings
     }
 
     constructor(){
+        //'appdata.json'
+        this.filename = 'appdata.json';
     }
 
     load(cb){
@@ -32,7 +34,7 @@ class AppSettings
     
     settingsInit(cb) {
         this.tries++;
-        this.gdad = gdad('appdata.json', '775581458798-if8ovf7b014udbbhlt00l1lff6dskmsu.apps.googleusercontent.com');
+        this.gdad = gdad(this.filename, '775581458798-if8ovf7b014udbbhlt00l1lff6dskmsu.apps.googleusercontent.com');
         this.gdad.read().then(function (data) {
             cb.call(this, data);
         }, e => {

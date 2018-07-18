@@ -11,6 +11,7 @@ export class StatModel
         this.add    = conf.add      || [];
         this.mod    = conf.mod      || 0;
         this.deleted =  conf.deleted    || false;
+        this.type =  conf.type || 'normal';
     }
 
     toString(){

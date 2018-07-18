@@ -10,12 +10,21 @@ export class Stat extends React.Component
     constructor(props){
         super(props);
         this.state = {
-            data : scope.getStat(this.props.name)
+            data : props.stat || scope.getStat(
+                this.props.stat.code, 
+                this.props.stat.title
+            ),
+            editMode : props.editMode
         }
     }
 
-    componentWillUnmount()
+    componentDidUpdate()
     {
+        if(this.props.editMode !=  this.state.editMode) {
+            this.setState({
+                editMode : this.props.editMode
+            });
+        }
     }
 
     componentDidMount()
@@ -25,7 +34,12 @@ export class Stat extends React.Component
     handleChange(e){
         var stat =  this.state.data;
         var changed = e.target.name;
-        stat[changed] = Number(e.target.value);
+
+        if(changed == 'misc' || changed == 'value'){
+            stat[changed] = Number(e.target.value);
+        } else {
+            stat[changed] = e.target.value;
+        }
 
         stat.mod = Math.floor(
             (stat.value + stat.misc - 10) / 2
@@ -37,11 +51,23 @@ export class Stat extends React.Component
         });
     }
 
-    onDelete(){
+    deleteAction(){
         this.state.data.deleted = true;
         this.setState({ data : this.state.data },
-        function(){
+        () => {
             scope.fire(['stat:delete', 'scope:save'], this.state.data);
+        });
+    }
+
+    onDelete(){
+        scope.fire(['confirmation:request'], {
+            confirm : () => {
+                this.deleteAction();
+                scope.fire(['scope:save'], {});
+            },
+            cancel : () => {
+                
+            }
         });
     }
 
@@ -49,21 +75,44 @@ export class Stat extends React.Component
     {
         return this.state.data == null ? '' : (
             <div className="c-stat">
-                <button onClick={ e => this.onDelete(e) } >
-                    delete
-                </button>
-
+            {   
+                this.state.editMode ? 
+                    <button onClick={ e => this.onDelete(e) } >
+                        delete
+                    </button>
+                :   
+                ''
+            }
                 <div className="c-stat-row">
                     <div className="c-stat-row_label">
-                        { this.props.name.toUpperCase() }
+
+                        {   
+                            this.state.editMode ? 
+                                <input
+                                    type='text'
+                                    name="code"
+                                    value={ this.state.data.code }
+                                    onChange={ e => this.handleChange(e) } />
+                                :   
+                                <span>
+                                    { this.state.data.code }
+                                </span>
+                        }
                     </div>
                     <div className="c-stat-row_input">
-                        <input
-                            type='text'
-                            id={this.props.name}
-                            name="value"
-                            value={ this.state.data.value }
-                            onChange={ e => this.handleChange(e) } />
+                        {   
+                            this.state.editMode ? 
+                                <input
+                                    type='text'
+                                    id={this.state.data.name}
+                                    name="value"
+                                    value={ this.state.data.value }
+                                    onChange={ e => this.handleChange(e) } />
+                            :   
+                                <span>
+                                    { this.state.data.value }
+                                </span>
+                        }
                     </div>
                 </div>
 
@@ -72,12 +121,19 @@ export class Stat extends React.Component
                         misc
                     </div>
                     <div className="c-stat-row_input">
-                        <input
-                            type='text'
-                            id={this.props.name + '_misc'}
-                            name="misc"
-                            value={ this.state.data.misc }
-                            onChange={ e => this.handleChange(e) } />
+                        {   
+                            this.state.editMode ? 
+                                <input
+                                    type='text'
+                                    id={this.state.data.code + '_misc'}
+                                    name="misc"
+                                    value={ this.state.data.misc }
+                                    onChange={ e => this.handleChange(e) } />
+                                :   
+                                <span>
+                                    { this.state.data.misc }
+                                </span>
+                        }
                     </div>
                 </div>
 

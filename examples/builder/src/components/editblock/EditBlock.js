@@ -30,11 +30,23 @@ export class EditBlock extends React.Component
         scope.fire(['scope:save'], this.state.edit);
     }
 
-    onDelete(){
+    deleteAction(){
         this.state.edit.deleted = true;
         this.setState({ edit : this.state.edit },
         function(){
             scope.fire(['block:delete', 'scope:save'], this.state.edit);
+        });
+    }
+
+    onDelete(){
+        scope.fire(['confirmation:request'], {
+            confirm : () => {
+                this.deleteAction();
+                scope.fire(['scope:save'], {});
+            },
+            cancel : () => {
+                
+            }
         });
     }
 
@@ -48,7 +60,7 @@ export class EditBlock extends React.Component
     {
        
         try{
-            var tt = nunJucks.renderString(this.state.edit.value, scope.data);
+            var tt = nunJucks.renderString(this.state.edit.value, scope.getData());
             if(tt){
                 this.blockPreview = tt;
             } else {
@@ -59,10 +71,15 @@ export class EditBlock extends React.Component
 
         return (
             <div className="c-edit-block">
-                <button onClick={ e => this.onDelete(e) } >
-                    delete
-                </button>
 
+                {
+                    this.state.editMode ? 
+                        <button onClick={ e => this.onDelete(e) } >
+                            delete
+                        </button>
+                    : 
+                    ''
+                }
                 <button onClick={ e => this.onEdit(e) } >
                     { this.state.editMode ? 'view mode' : 'edit mode' }
                 </button>

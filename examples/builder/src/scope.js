@@ -12,6 +12,10 @@ class Scope {
 
         ];
 
+        this.basicItems = [
+
+        ];
+
         this.blocks = [
 
         ];
@@ -21,11 +25,22 @@ class Scope {
         };
     }
 
+    getData(key) {
+        var t = {};
+        key = key || 'code';
+
+        [].concat(this.basicItems, this.items).forEach( i => {
+            t[i[key]] = i;
+        });
+
+        return t;
+    }
+
     loadStats(stats){
-        stats.filter( e => !e.deleted ).forEach(element => {
+        stats.filter( e => !e.deleted ).forEach( element => {
             var stat = new StatModel(element);
             this.items.push(stat);
-            this.data[stat.code] = stat;
+            //this.data[stat.code] = stat;
         });
     }
 
@@ -37,14 +52,22 @@ class Scope {
     }
 
     getStat(name, title) {
-        if(!this.data[name]){
-            this.data[name] = new StatModel({
-                title: title || "",
-                code : name || ""
-            });
-            this.items.push(this.data[name]);
+
+        var items = [].concat(this.basicItems, this.items).filter( i => {
+            return i.code == name;
+        });
+
+        if(items.length){
+            return items[0];
         }
-        return this.data[name]
+        
+        var stat = new StatModel({
+            title: title || "",
+            code : name || ""
+        });
+
+        this.items.push(stat);
+        return stat;
     }
 
     getIcon(name) {
